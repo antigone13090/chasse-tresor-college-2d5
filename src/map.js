@@ -61,7 +61,7 @@
 
     // Quest markers are placed in walkable cells just outside recognizable rooms.
     grid[17][23] = "C1"; // Vie scolaire
-    grid[22][29] = "C2"; // CDI
+    grid[22][28] = "C2"; // CDI
     grid[27][35] = "C3"; // Auditorium
     grid[14][13] = "C4"; // Gymnase / Preau
     grid[12][34] = "C5"; // Arts / Musique
@@ -125,6 +125,14 @@
       y2: building.y + building.height - 1
     };
   }).concat([
+    // Small approach zones make the HUD match the nearby room, not only the courtyard.
+    { id: "abords-vie-scolaire", name: "Vie scolaire", floor: "SPECIAL", color: college.colors.special, collidable: false, x1: 22, y1: 16, x2: 24, y2: 18 },
+    { id: "abords-cdi", name: "CDI", floor: "R+1", color: college.colors.r1, collidable: false, x1: 28, y1: 19, x2: 31, y2: 22 },
+    { id: "abords-auditorium", name: "Auditorium", floor: "SPECIAL", color: college.colors.special, collidable: false, x1: 34, y1: 24, x2: 37, y2: 28 },
+    { id: "abords-gymnase", name: "Gymnase / Préau", floor: "EXT", color: college.colors.path, collidable: false, x1: 12, y1: 13, x2: 15, y2: 15 },
+    { id: "abords-arts-musique", name: "Arts / Musique", floor: "R+1", color: college.colors.r1, collidable: false, x1: 33, y1: 11, x2: 36, y2: 13 },
+    { id: "abords-self", name: "Self élèves", floor: "RDC", color: college.colors.rdc, collidable: false, x1: 41, y1: 27, x2: 45, y2: 29 },
+    { id: "abords-conseils-multi", name: "Conseils / Multi 1", floor: "EXT", color: college.colors.path, collidable: false, x1: 29, y1: 22, x2: 33, y2: 24 },
     { id: "couloir-gymnase", name: "Passage gymnase / preau", floor: "EXT", color: college.colors.path, collidable: false, x1: 13, y1: 13, x2: 19, y2: 20 },
     { id: "axe-central", name: "Axe principal", floor: "EXT", color: college.colors.path, collidable: false, x1: 20, y1: 9, x2: 38, y2: 24 },
     { id: "coursive-self", name: "Coursive self / auditorium", floor: "EXT", color: college.colors.path, collidable: false, x1: 35, y1: 20, x2: 43, y2: 32 },
@@ -183,13 +191,22 @@
   }
 
   function zoneAt(cellX, cellY) {
+    var best = null;
+    var bestArea = Infinity;
+
     for (var i = 0; i < zones.length; i += 1) {
       var zone = zones[i];
       if (cellX >= zone.x1 && cellX <= zone.x2 && cellY >= zone.y1 && cellY <= zone.y2) {
-        return zone.name;
+        var area = (zone.x2 - zone.x1 + 1) * (zone.y2 - zone.y1 + 1);
+        // Prefer compact named places over broad courtyard/corridor overlays.
+        if (area < bestArea) {
+          best = zone;
+          bestArea = area;
+        }
       }
     }
-    return "Coursive ou chemin";
+
+    return best ? best.name : "Coursive ou chemin";
   }
 
   function tileColor(token) {
