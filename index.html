@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chasse au trésor du collège</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game-canvas" width="960" height="540" aria-label="Jeu 2.5D de chasse au trésor"></canvas>
+
+    <section id="main-menu" class="screen active" aria-label="Menu principal">
+      <div class="menu-panel">
+        <p class="kicker">FPS 2.5D éducatif</p>
+        <h1>Chasse au trésor du collège</h1>
+        <button id="play-button" type="button">Jouer</button>
+        <button id="rules-button" type="button">Règles</button>
+        <button id="quit-button" type="button">Quitter / Retour</button>
+      </div>
+    </section>
+
+    <section id="rules-screen" class="screen" aria-label="Règles du jeu">
+      <div class="menu-panel rules">
+        <h2>Règles</h2>
+        <p>Trouve les 6 indices dans l'ordre, puis récupère le trésor final.</p>
+        <p>Explore la Vie scolaire, le CDI, l'auditorium, le gymnase, Arts/Musique et le self élèves.</p>
+        <p>Les couleurs de la mini-carte indiquent les niveaux, les escaliers et les zones spéciales.</p>
+        <button id="rules-back-button" type="button">Retour</button>
+      </div>
+    </section>
+
+    <section id="pause-screen" class="screen" aria-label="Pause">
+      <div class="menu-panel small">
+        <h2>Pause</h2>
+        <button id="resume-button" type="button">Reprendre</button>
+        <button id="pause-menu-button" type="button">Menu principal</button>
+      </div>
+    </section>
+
+    <div id="hud" class="hud hidden">
+      <div class="hud-card">
+        <span class="label">Objectif</span>
+        <strong id="objective-text">Commence la chasse au trésor.</strong>
+      </div>
+      <div class="hud-card compact">
+        <span class="label">Indices</span>
+        <strong id="clue-count">0 / 6</strong>
+      </div>
+      <div class="hud-card compact">
+        <span class="label">Zone</span>
+        <strong id="zone-text">Entrée</strong>
+      </div>
+      <div id="interaction-prompt" class="prompt hidden">Appuie sur E pour interagir</div>
+      <div id="message" class="message hidden"></div>
+      <div id="debug-panel" class="debug hidden"></div>
+    </div>
+  </main>
+
+  <script src="src/config.js"></script>
+  <script src="src/mapCollege.js"></script>
+  <script src="src/map.js"></script>
+  <script src="src/gameState.js"></script>
+  <script src="src/player.js"></script>
+  <script src="src/input.js"></script>
+  <script src="src/raycaster.js"></script>
+  <script src="src/renderer.js"></script>
+  <script src="src/interactions.js"></script>
+  <script src="src/ui.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
