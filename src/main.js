@@ -23,6 +23,8 @@
     state.mode = "playing";
     window.TreasureGame.UI.setScreen("");
     if (window.TreasureGame.Audio) {
+      window.TreasureGame.Audio.initAudio();
+      window.TreasureGame.Audio.resumeAudio();
       window.TreasureGame.Audio.startAmbientMusic();
     }
     window.TreasureGame.GameState.setMessage(state, "Explore l'entrée centrale et trouve la Vie scolaire.", 3);
@@ -32,6 +34,7 @@
     state.mode = "playing";
     window.TreasureGame.UI.setScreen("");
     if (window.TreasureGame.Audio) {
+      window.TreasureGame.Audio.resumeAudio();
       window.TreasureGame.Audio.startAmbientMusic();
     }
   }
@@ -39,9 +42,6 @@
   function pause() {
     state.mode = "paused";
     window.TreasureGame.UI.setScreen("pause-screen");
-    if (window.TreasureGame.Audio) {
-      window.TreasureGame.Audio.stopAmbientMusic();
-    }
   }
 
   function backToMenu() {
@@ -54,6 +54,10 @@
 
   function isPlaying() {
     return state.mode === "playing";
+  }
+
+  function isInGame() {
+    return state.mode === "playing" || state.mode === "paused";
   }
 
   function handleShortcuts() {
@@ -102,6 +106,7 @@
     resume: resume,
     backToMenu: backToMenu,
     isPlaying: isPlaying,
+    isInGame: isInGame,
     setInstructionsVisible: setInstructionsVisible
   });
 

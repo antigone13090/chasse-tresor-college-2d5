@@ -174,11 +174,11 @@ assets/
 
 ## Audio
 
-Les effets sonores et la musique d'ambiance sont générés directement dans le navigateur avec la Web Audio API, dans `src/audio.js`.
+Les effets sonores sont générés directement dans le navigateur avec la Web Audio API, dans `src/audio.js`.
 
-Aucun fichier musical externe, CDN ou morceau commercial n'est utilisé. La musique est originale et générée par le code du projet avec des oscillateurs, des accords lents, un filtre passe-bas et de petites notes espacées.
+La musique d'ambiance est elle aussi générée par le code JavaScript : aucun fichier MP3, WAV, CDN ou morceau commercial n'est utilisé. Elle est produite avec des oscillateurs, des accords lents, de petites notes espacées, des enveloppes de volume et un filtre passe-bas pour rester douce et discrète.
 
-Les paramètres permettent de couper tout le son, de régler le volume, de désactiver uniquement la musique d'ambiance ou de désactiver uniquement les effets sonores. Ces réglages sont sauvegardés dans `localStorage`.
+Elle démarre après le clic utilisateur sur `JOUER`, quand le navigateur autorise l'AudioContext. Les paramètres permettent de couper tout le son, d'activer ou désactiver la musique d'ambiance et de régler le volume de la musique et des effets. Ces réglages sont sauvegardés dans `localStorage`.
 
 ## Tests
 

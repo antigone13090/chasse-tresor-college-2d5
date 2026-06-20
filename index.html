@@ -73,6 +73,7 @@
           <input id="ambient-toggle" type="checkbox" checked>
           <span>Musique d’ambiance : activée</span>
         </label>
+        <p id="settings-audio-status" class="panel-line audio-state">Musique : OFF</p>
         <label class="toggle-row" for="effects-toggle">
           <input id="effects-toggle" type="checkbox" checked>
           <span>Effets sonores : activés</span>
@@ -109,6 +110,7 @@
         <span class="screw bottom-right" aria-hidden="true"></span>
         <h2>PAUSE</h2>
         <button id="resume-button" class="arcade-button" type="button">REPRENDRE</button>
+        <button id="pause-settings-button" class="arcade-button" type="button">PARAMÈTRES</button>
         <button id="pause-menu-button" class="arcade-button" type="button">MENU PRINCIPAL</button>
       </div>
     </section>
@@ -125,6 +127,10 @@
       <div class="hud-card compact">
         <span class="label">Lieu actuel</span>
         <strong id="zone-text">Entrée</strong>
+      </div>
+      <div class="hud-card compact audio-indicator">
+        <span class="label">Audio</span>
+        <strong id="audio-status">Musique : OFF</strong>
       </div>
       <div id="place-card" class="hud-card place">
         <span class="label">Repère</span>

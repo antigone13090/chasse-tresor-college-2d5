@@ -9,8 +9,9 @@
   var ambientGain = null;
   var ambientFilter = null;
   var ambientTimer = null;
-  var ambientRunning = false;
+  var ambientPlaying = false;
   var ambientStep = 0;
+  var activeAmbientOscillators = [];
   var initialized = false;
   var settings = loadSettings();
 
@@ -60,9 +61,6 @@
 
   function initAudio() {
     if (initialized) {
-      if (context && context.state === "suspended") {
-        context.resume();
-      }
       return Boolean(context);
     }
 
@@ -89,6 +87,16 @@
     return true;
   }
 
+  function resumeAudio() {
+    if (!initAudio()) {
+      return false;
+    }
+    if (context.state === "suspended") {
+      context.resume();
+    }
+    return true;
+  }
+
   function now() {
     return context ? context.currentTime : 0;
   }
@@ -104,6 +112,7 @@
     var oscillator = context.createOscillator();
     var gain = context.createGain();
     var detune = options && options.detune ? options.detune : 0;
+    var ambientTone = destination === ambientGain;
 
     oscillator.type = type || "sine";
     oscillator.frequency.setValueAtTime(frequency, start);
@@ -118,12 +127,21 @@
     );
     oscillator.connect(gain);
     gain.connect(destination || masterGain);
+    if (ambientTone) {
+      activeAmbientOscillators.push(oscillator);
+      oscillator.onended = function () {
+        var index = activeAmbientOscillators.indexOf(oscillator);
+        if (index !== -1) {
+          activeAmbientOscillators.splice(index, 1);
+        }
+      };
+    }
     oscillator.start(start);
     oscillator.stop(start + duration + 0.08);
   }
 
   function playSequence(notes) {
-    if (!initAudio() || settings.muted || !settings.effectsEnabled) {
+    if (!resumeAudio() || settings.muted || !settings.effectsEnabled) {
       return;
     }
     var start = now();
@@ -163,7 +181,7 @@
   }
 
   function duckAmbient(duration) {
-    if (!ambientGain || !ambientRunning) {
+    if (!ambientGain || !ambientPlaying) {
       return;
     }
     var start = now();
@@ -184,7 +202,7 @@
   }
 
   function scheduleAmbientPhrase() {
-    if (!context || settings.muted || !settings.ambientEnabled || !ambientRunning) {
+    if (!context || settings.muted || !settings.ambientEnabled || !ambientPlaying) {
       return;
     }
 
@@ -219,11 +237,11 @@
   }
 
   function startAmbientMusic() {
-    if (!initAudio() || settings.muted || !settings.ambientEnabled || ambientRunning) {
+    if (!resumeAudio() || settings.muted || !settings.ambientEnabled || ambientPlaying) {
       return;
     }
 
-    ambientRunning = true;
+    ambientPlaying = true;
     ambientGain.gain.cancelScheduledValues(now());
     ambientGain.gain.setTargetAtTime(0.12, now(), 0.35);
     scheduleAmbientPhrase();
@@ -231,11 +249,19 @@
   }
 
   function stopAmbientMusic() {
-    ambientRunning = false;
+    ambientPlaying = false;
     if (ambientTimer) {
       window.clearInterval(ambientTimer);
       ambientTimer = null;
     }
+    activeAmbientOscillators.forEach(function (oscillator) {
+      try {
+        oscillator.stop();
+      } catch (error) {
+        // The oscillator may already have ended; stopping is best effort.
+      }
+    });
+    activeAmbientOscillators = [];
     if (ambientGain && context) {
       ambientGain.gain.cancelScheduledValues(now());
       ambientGain.gain.setTargetAtTime(0.0001, now(), 0.08);
@@ -279,12 +305,14 @@
       muted: settings.muted,
       volume: settings.volume,
       ambientEnabled: settings.ambientEnabled,
-      effectsEnabled: settings.effectsEnabled
+      effectsEnabled: settings.effectsEnabled,
+      ambientPlaying: ambientPlaying
     };
   }
 
   window.TreasureGame.Audio = {
     initAudio: initAudio,
+    resumeAudio: resumeAudio,
     playClickSound: playClickSound,
     playPanelSound: playPanelSound,
     playClueSound: playClueSound,

@@ -39,7 +39,7 @@
 
   function syncAudioControls() {
     var audio = window.TreasureGame.Audio;
-    var settings = audio ? audio.getAudioSettings() : { muted: true, volume: 0.45, ambientEnabled: false, effectsEnabled: false };
+    var settings = audio ? audio.getAudioSettings() : { muted: true, volume: 0.45, ambientEnabled: false, effectsEnabled: false, ambientPlaying: false };
     var soundToggle = byId("sound-toggle");
     var ambientToggle = byId("ambient-toggle");
     var effectsToggle = byId("effects-toggle");
@@ -53,6 +53,22 @@
     setToggleLabel(soundToggle, "Son : activé", "Son : désactivé");
     setToggleLabel(ambientToggle, "Musique d’ambiance : activée", "Musique d’ambiance : désactivée");
     setToggleLabel(effectsToggle, "Effets sonores : activés", "Effets sonores : désactivés");
+    updateAudioIndicator(settings);
+  }
+
+  function updateAudioIndicator(settings) {
+    var audioStatus = byId("audio-status");
+    var settingsStatus = byId("settings-audio-status");
+    var enabled = settings && !settings.muted && settings.ambientEnabled;
+    var playing = enabled && settings.ambientPlaying;
+    var text = "Musique : " + (playing ? "ON" : "OFF");
+
+    if (audioStatus) {
+      audioStatus.textContent = text;
+    }
+    if (settingsStatus) {
+      settingsStatus.textContent = text;
+    }
   }
 
   function initMenusFromStorage() {
@@ -69,19 +85,26 @@
     var effectsToggle = byId("effects-toggle");
     var volumeSlider = byId("volume-slider");
     var audio = window.TreasureGame.Audio;
+    var settingsReturnScreen = "main-menu";
 
     initMenusFromStorage();
 
     byId("play-button").addEventListener("click", function () {
       if (audio) {
         audio.initAudio();
+        audio.resumeAudio();
         audio.playClickSound();
       }
       game.start();
+      if (audio) {
+        audio.startAmbientMusic();
+        updateAudioIndicator(audio.getAudioSettings());
+      }
     });
     byId("discover-button").addEventListener("click", function () {
       if (audio) {
         audio.initAudio();
+        audio.resumeAudio();
         audio.playPanelSound();
       }
       setScreen("discover-screen");
@@ -95,19 +118,22 @@
     byId("settings-button").addEventListener("click", function () {
       if (audio) {
         audio.initAudio();
+        audio.resumeAudio();
         audio.playPanelSound();
       }
+      settingsReturnScreen = "main-menu";
       setScreen("settings-screen");
     });
     byId("settings-back-button").addEventListener("click", function () {
       if (audio) {
         audio.playClickSound();
       }
-      setScreen("main-menu");
+      setScreen(settingsReturnScreen);
     });
     byId("credits-button").addEventListener("click", function () {
       if (audio) {
         audio.initAudio();
+        audio.resumeAudio();
         audio.playPanelSound();
       }
       setScreen("credits-screen");
@@ -121,34 +147,40 @@
     soundToggle.addEventListener("change", function () {
       if (audio) {
         audio.initAudio();
+        audio.resumeAudio();
         audio.setMuted(!soundToggle.checked);
         if (soundToggle.checked) {
           audio.playPanelSound();
-          if (game.isPlaying && game.isPlaying()) {
+          if (game.isInGame && game.isInGame()) {
             audio.startAmbientMusic();
           }
         }
+        updateAudioIndicator(audio.getAudioSettings());
       }
       setToggleLabel(soundToggle, "Son : activé", "Son : désactivé");
     });
     ambientToggle.addEventListener("change", function () {
       if (audio) {
         audio.initAudio();
+        audio.resumeAudio();
         audio.setAmbientEnabled(ambientToggle.checked);
         audio.playPanelSound();
-        if (ambientToggle.checked && game.isPlaying && game.isPlaying()) {
+        if (ambientToggle.checked && game.isInGame && game.isInGame()) {
           audio.startAmbientMusic();
         } else {
           audio.stopAmbientMusic();
         }
+        updateAudioIndicator(audio.getAudioSettings());
       }
       setToggleLabel(ambientToggle, "Musique d’ambiance : activée", "Musique d’ambiance : désactivée");
     });
     effectsToggle.addEventListener("change", function () {
       if (audio) {
         audio.initAudio();
+        audio.resumeAudio();
         audio.setEffectsEnabled(effectsToggle.checked);
         audio.playPanelSound();
+        updateAudioIndicator(audio.getAudioSettings());
       }
       setToggleLabel(effectsToggle, "Effets sonores : activés", "Effets sonores : désactivés");
     });
@@ -156,6 +188,7 @@
       byId("volume-value").textContent = volumeSlider.value;
       if (audio) {
         audio.setVolume(Number(volumeSlider.value) / 100);
+        updateAudioIndicator(audio.getAudioSettings());
       }
     });
     volumeSlider.addEventListener("change", function () {
@@ -173,9 +206,18 @@
     });
     byId("resume-button").addEventListener("click", function () {
       if (audio) {
+        audio.resumeAudio();
         audio.playClickSound();
       }
       game.resume();
+    });
+    byId("pause-settings-button").addEventListener("click", function () {
+      if (audio) {
+        audio.resumeAudio();
+        audio.playPanelSound();
+      }
+      settingsReturnScreen = "pause-screen";
+      setScreen("settings-screen");
     });
     byId("pause-menu-button").addEventListener("click", function () {
       if (audio) {
@@ -206,6 +248,9 @@
     byId("clue-count").textContent = state.foundClues + " / " + window.TreasureGame.Config.clueTotal;
     byId("zone-text").textContent = zoneName;
     byId("place-description").textContent = window.TreasureGame.MapData.zoneDescriptionAt(cellX, cellY);
+    if (window.TreasureGame.Audio) {
+      updateAudioIndicator(window.TreasureGame.Audio.getAudioSettings());
+    }
 
     prompt.classList.toggle("hidden", state.mode !== "playing" || !state.currentInteraction);
 
