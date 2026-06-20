@@ -15,13 +15,30 @@ vm.createContext(context);
 [
   "src/config.js",
   "src/mapCollege.js",
-  "src/map.js"
+  "src/map.js",
+  "src/gameState.js",
+  "src/interactions.js"
 ].forEach(function (file) {
   var source = fs.readFileSync(path.join(root, file), "utf8");
   vm.runInContext(source, context, { filename: file });
 });
 
 var game = context.window.TreasureGame;
+var audioCounts = {
+  clue: 0,
+  treasure: 0
+};
+
+game.Audio = {
+  playClueSound: function () {
+    audioCounts.clue += 1;
+  },
+  playTreasureSound: function () {
+    audioCounts.treasure += 1;
+  },
+  stopAmbientMusic: function () {}
+};
+
 var mapData = game.MapData;
 var config = game.Config;
 var grid = mapData.baseGrid;
@@ -142,9 +159,61 @@ function checkReachability() {
   });
 }
 
+function checkInteractionSequence() {
+  var state = game.GameState.create();
+
+  Object.keys(expected).forEach(function (token) {
+    var position = mapData.findToken(token);
+    var clue = mapData.clues[token];
+    var beforeClueSounds = audioCounts.clue;
+    var beforeTreasureSounds = audioCounts.treasure;
+    var player = {
+      x: position.x + 0.5,
+      y: position.y + 0.5
+    };
+
+    game.Interactions.perform(state, player);
+
+    if (token === "T") {
+      if (!state.treasureFound) {
+        fail("T ne marque pas le trésor comme trouvé.");
+      }
+      if (audioCounts.treasure !== beforeTreasureSounds + 1) {
+        fail("T ne déclenche pas playTreasureSound() exactement une fois.");
+      }
+      if (audioCounts.clue !== beforeClueSounds) {
+        fail("T ne doit pas déclencher playClueSound().");
+      }
+      return;
+    }
+
+    if (state.foundClues !== clue.order) {
+      fail(token + " ne progresse pas l'ordre des indices correctement.");
+    }
+    if (state.grid[position.y][position.x] !== "0") {
+      fail(token + " n'est pas retiré de la grille après collecte.");
+    }
+    if (state.temporaryMessage.indexOf(clue.title) === -1 || state.temporaryMessage.indexOf(clue.text) === -1) {
+      fail(token + " ne déclenche pas le bon texte.");
+    }
+    if (audioCounts.clue !== beforeClueSounds + 1) {
+      fail(token + " ne déclenche pas playClueSound() exactement une fois.");
+    }
+    if (audioCounts.treasure !== beforeTreasureSounds) {
+      fail(token + " ne doit pas déclencher playTreasureSound().");
+    }
+
+    game.Interactions.perform(state, player);
+    if (audioCounts.clue !== beforeClueSounds + 1) {
+      fail(token + " peut déclencher le son d'indice plusieurs fois.");
+    }
+  });
+}
+
 checkDimensions();
 checkClueTexts();
 checkReachability();
+checkInteractionSequence();
 
 if (failures.length > 0) {
   console.error("\nVérification carte échouée :");
@@ -154,4 +223,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("\nCarte OK : dimensions, départ, C1-C6, trésor et zones HUD vérifiés.");
+console.log("\nCarte OK : dimensions, départ, C1-C6, trésor, zones HUD, textes et sons d'interaction vérifiés.");

@@ -73,11 +73,12 @@
           <input id="ambient-toggle" type="checkbox" checked>
           <span>Musique d’ambiance : activée</span>
         </label>
-        <p id="settings-audio-status" class="panel-line audio-state">Musique : OFF</p>
         <label class="toggle-row" for="effects-toggle">
           <input id="effects-toggle" type="checkbox" checked>
           <span>Effets sonores : activés</span>
         </label>
+        <p id="settings-audio-status" class="panel-line audio-state">État audio : non initialisé<br>Musique : inactive</p>
+        <button id="reset-audio-button" class="arcade-button secondary" type="button">RÉINITIALISER AUDIO</button>
         <label class="toggle-row" for="instructions-toggle">
           <input id="instructions-toggle" type="checkbox" checked>
           <span>Afficher les consignes : activé</span>
@@ -150,8 +151,8 @@
   <script src="src/input.js"></script>
   <script src="src/raycaster.js"></script>
   <script src="src/renderer.js"></script>
-  <script src="src/interactions.js"></script>
   <script src="src/audio.js"></script>
+  <script src="src/interactions.js"></script>
   <script src="src/ui.js"></script>
   <script src="src/main.js"></script>
 </body>

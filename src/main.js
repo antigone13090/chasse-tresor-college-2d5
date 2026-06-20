@@ -23,6 +23,7 @@
     state.mode = "playing";
     window.TreasureGame.UI.setScreen("");
     if (window.TreasureGame.Audio) {
+      window.TreasureGame.Audio.setGameActive(true);
       window.TreasureGame.Audio.initAudio();
       window.TreasureGame.Audio.resumeAudio();
       window.TreasureGame.Audio.startAmbientMusic();
@@ -34,6 +35,7 @@
     state.mode = "playing";
     window.TreasureGame.UI.setScreen("");
     if (window.TreasureGame.Audio) {
+      window.TreasureGame.Audio.setGameActive(true);
       window.TreasureGame.Audio.resumeAudio();
       window.TreasureGame.Audio.startAmbientMusic();
     }
@@ -48,7 +50,7 @@
     state.mode = "menu";
     window.TreasureGame.UI.setScreen("main-menu");
     if (window.TreasureGame.Audio) {
-      window.TreasureGame.Audio.stopAmbientMusic();
+      window.TreasureGame.Audio.setGameActive(false);
     }
   }
 

@@ -4,311 +4,360 @@
   window.TreasureGame = window.TreasureGame || {};
 
   var STORAGE_KEY = "treasureGameAudioSettings";
-  var context = null;
+  var audioContext = null;
   var masterGain = null;
   var ambientGain = null;
   var ambientFilter = null;
   var ambientTimer = null;
   var ambientPlaying = false;
+  var muted = false;
+  var ambientEnabled = true;
+  var effectsEnabled = true;
+  var volume = 0.35;
+  var gameActive = false;
+  var activeAmbientNodes = [];
   var ambientStep = 0;
-  var activeAmbientOscillators = [];
-  var initialized = false;
-  var settings = loadSettings();
 
-  var AMBIENT_CHORDS = [
-    [196, 246.94, 329.63],
-    [174.61, 220, 293.66],
-    [164.81, 246.94, 311.13],
-    [185, 233.08, 293.66]
+  var AMBIENT_NOTES = [
+    { name: "A3", frequency: 220 },
+    { name: "C4", frequency: 261.63 },
+    { name: "E4", frequency: 329.63 },
+    { name: "G4", frequency: 392 },
+    { name: "E4", frequency: 329.63 },
+    { name: "C4", frequency: 261.63 }
   ];
-  var AMBIENT_NOTES = [392, 329.63, 440, 369.99, 493.88, 415.3];
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
 
   function loadSettings() {
-    var defaults = {
-      muted: false,
-      volume: 0.45,
-      ambientEnabled: true,
-      effectsEnabled: true
-    };
-
     try {
       var stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (!stored) {
-        return defaults;
+        return;
       }
-      return {
-        muted: Boolean(stored.muted),
-        volume: typeof stored.volume === "number" ? clamp(stored.volume, 0, 1) : defaults.volume,
-        ambientEnabled: stored.ambientEnabled !== false,
-        effectsEnabled: stored.effectsEnabled !== false
-      };
+      muted = Boolean(stored.muted);
+      ambientEnabled = stored.ambientEnabled !== false;
+      effectsEnabled = stored.effectsEnabled !== false;
+      volume = typeof stored.volume === "number" ? clamp(stored.volume, 0, 1) : 0.35;
     } catch (error) {
-      return defaults;
+      muted = false;
+      ambientEnabled = true;
+      effectsEnabled = true;
+      volume = 0.35;
     }
   }
 
   function saveSettings() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        muted: muted,
+        ambientEnabled: ambientEnabled,
+        effectsEnabled: effectsEnabled,
+        volume: volume
+      }));
     } catch (error) {
-      // Local storage can be unavailable in restricted contexts; audio still works.
+      // Audio still works if localStorage is blocked.
     }
   }
 
+  function currentTime() {
+    return audioContext ? audioContext.currentTime : 0;
+  }
+
+  function applyMasterVolume() {
+    if (!masterGain || !audioContext) {
+      return;
+    }
+    masterGain.gain.cancelScheduledValues(currentTime());
+    masterGain.gain.setTargetAtTime(muted ? 0 : volume, currentTime(), 0.02);
+  }
+
   function initAudio() {
-    if (initialized) {
-      return Boolean(context);
+    loadSettings();
+
+    if (!audioContext) {
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) {
+        console.log("[Audio] init unavailable");
+        return false;
+      }
+
+      audioContext = new AudioContext();
+      masterGain = audioContext.createGain();
+      ambientGain = audioContext.createGain();
+      ambientFilter = audioContext.createBiquadFilter();
+
+      ambientGain.gain.value = 0.16;
+      ambientFilter.type = "lowpass";
+      ambientFilter.frequency.value = 1500;
+      ambientFilter.Q.value = 0.55;
+
+      ambientGain.connect(ambientFilter);
+      ambientFilter.connect(masterGain);
+      masterGain.connect(audioContext.destination);
     }
 
-    var AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) {
-      return false;
-    }
-
-    context = new AudioContext();
-    masterGain = context.createGain();
-    ambientGain = context.createGain();
-    ambientFilter = context.createBiquadFilter();
-
-    masterGain.gain.value = settings.muted ? 0 : settings.volume;
-    ambientGain.gain.value = 0.12;
-    ambientFilter.type = "lowpass";
-    ambientFilter.frequency.value = 1450;
-    ambientFilter.Q.value = 0.45;
-
-    ambientGain.connect(ambientFilter);
-    ambientFilter.connect(masterGain);
-    masterGain.connect(context.destination);
-    initialized = true;
+    applyMasterVolume();
+    console.log("[Audio] init");
+    console.log("[Audio] settings", getAudioSettings());
     return true;
   }
 
   function resumeAudio() {
     if (!initAudio()) {
-      return false;
+      return Promise.resolve(false);
     }
-    if (context.state === "suspended") {
-      context.resume();
+
+    if (audioContext.state === "suspended") {
+      return audioContext.resume().then(function () {
+        console.log("[Audio] resumed", audioContext.state);
+        return true;
+      });
     }
-    return true;
+
+    console.log("[Audio] resumed", audioContext.state);
+    return Promise.resolve(true);
   }
 
-  function now() {
-    return context ? context.currentTime : 0;
+  function envelope(gainNode, start, attack, hold, release, peak) {
+    gainNode.gain.cancelScheduledValues(start);
+    gainNode.gain.setValueAtTime(0.0001, start);
+    gainNode.gain.linearRampToValueAtTime(peak, start + attack);
+    gainNode.gain.setValueAtTime(peak, start + attack + hold);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, start + attack + hold + release);
   }
 
-  function setEnvelope(gain, start, attack, decay, peak, sustain) {
-    gain.gain.cancelScheduledValues(start);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, peak), start + attack);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustain), start + attack + decay);
-  }
-
-  function tone(frequency, start, duration, type, peak, destination, options) {
-    var oscillator = context.createOscillator();
-    var gain = context.createGain();
-    var detune = options && options.detune ? options.detune : 0;
-    var ambientTone = destination === ambientGain;
+  function playTone(frequency, start, duration, type, peak, destination, options) {
+    var oscillator = audioContext.createOscillator();
+    var gainNode = audioContext.createGain();
+    var attack = options && options.attack !== undefined ? options.attack : 0.01;
+    var release = options && options.release !== undefined ? options.release : 0.04;
+    var hold = Math.max(0.01, duration - attack - release);
 
     oscillator.type = type || "sine";
     oscillator.frequency.setValueAtTime(frequency, start);
-    oscillator.detune.setValueAtTime(detune, start);
-    setEnvelope(
-      gain,
-      start,
-      options && options.attack !== undefined ? options.attack : 0.012,
-      options && options.decay !== undefined ? options.decay : Math.max(0.03, duration - 0.012),
-      peak,
-      options && options.sustain !== undefined ? options.sustain : 0.0001
-    );
-    oscillator.connect(gain);
-    gain.connect(destination || masterGain);
-    if (ambientTone) {
-      activeAmbientOscillators.push(oscillator);
+    if (options && options.detune) {
+      oscillator.detune.setValueAtTime(options.detune, start);
+    }
+
+    envelope(gainNode, start, attack, hold, release, peak);
+    oscillator.connect(gainNode);
+    gainNode.connect(destination || masterGain);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.03);
+
+    if (destination === ambientGain) {
+      activeAmbientNodes.push(oscillator);
       oscillator.onended = function () {
-        var index = activeAmbientOscillators.indexOf(oscillator);
+        var index = activeAmbientNodes.indexOf(oscillator);
         if (index !== -1) {
-          activeAmbientOscillators.splice(index, 1);
+          activeAmbientNodes.splice(index, 1);
         }
       };
     }
-    oscillator.start(start);
-    oscillator.stop(start + duration + 0.08);
   }
 
-  function playSequence(notes) {
-    if (!resumeAudio() || settings.muted || !settings.effectsEnabled) {
-      return;
-    }
-    var start = now();
-    notes.forEach(function (note) {
-      tone(
-        note.frequency,
-        start + (note.delay || 0),
-        note.duration || 0.12,
-        note.type || "sine",
-        note.peak || 0.12,
-        note.destination,
-        note.options
-      );
-    });
+  function canPlayEffects() {
+    return initAudio() && !muted && effectsEnabled && volume > 0;
   }
 
   function playClickSound() {
-    playSequence([
-      { frequency: 520, duration: 0.045, type: "square", peak: 0.055 },
-      { frequency: 760, delay: 0.035, duration: 0.055, type: "triangle", peak: 0.04 }
-    ]);
+    if (!canPlayEffects()) {
+      return;
+    }
+
+    var start = currentTime();
+    playTone(420, start, 0.04, "triangle", 0.18, masterGain, { attack: 0.004, release: 0.018 });
+    playTone(650, start + 0.04, 0.04, "triangle", 0.15, masterGain, { attack: 0.004, release: 0.02 });
+    console.log("[Audio] click");
   }
 
   function playPanelSound() {
-    playSequence([
-      { frequency: 330, duration: 0.08, type: "triangle", peak: 0.055 },
-      { frequency: 440, delay: 0.06, duration: 0.1, type: "sine", peak: 0.045 }
-    ]);
+    if (!canPlayEffects()) {
+      return;
+    }
+
+    var start = currentTime();
+    playTone(330, start, 0.11, "sine", 0.11, masterGain, { attack: 0.012, release: 0.06 });
+    playTone(440, start + 0.07, 0.12, "triangle", 0.08, masterGain, { attack: 0.018, release: 0.07 });
   }
 
   function playClueSound() {
-    playSequence([
-      { frequency: 523.25, duration: 0.12, type: "sine", peak: 0.075 },
-      { frequency: 659.25, delay: 0.1, duration: 0.14, type: "sine", peak: 0.07 },
-      { frequency: 783.99, delay: 0.22, duration: 0.18, type: "triangle", peak: 0.06 }
-    ]);
-  }
-
-  function duckAmbient(duration) {
-    if (!ambientGain || !ambientPlaying) {
+    if (!canPlayEffects()) {
       return;
     }
-    var start = now();
-    ambientGain.gain.cancelScheduledValues(start);
-    ambientGain.gain.setTargetAtTime(0.035, start, 0.08);
-    ambientGain.gain.setTargetAtTime(0.12, start + duration, 0.9);
+
+    var start = currentTime();
+    playTone(523.25, start, 0.12, "sine", 0.13, masterGain, { attack: 0.01, release: 0.05 });
+    playTone(659.25, start + 0.11, 0.14, "sine", 0.12, masterGain, { attack: 0.01, release: 0.06 });
+    playTone(783.99, start + 0.24, 0.2, "triangle", 0.1, masterGain, { attack: 0.012, release: 0.08 });
   }
 
   function playTreasureSound() {
-    duckAmbient(2.2);
-    playSequence([
-      { frequency: 392, duration: 0.13, type: "triangle", peak: 0.08 },
-      { frequency: 523.25, delay: 0.1, duration: 0.16, type: "sine", peak: 0.085 },
-      { frequency: 659.25, delay: 0.22, duration: 0.2, type: "sine", peak: 0.08 },
-      { frequency: 1046.5, delay: 0.4, duration: 0.28, type: "triangle", peak: 0.055 },
-      { frequency: 783.99, delay: 0.68, duration: 0.42, type: "sine", peak: 0.045 }
-    ]);
-  }
-
-  function scheduleAmbientPhrase() {
-    if (!context || settings.muted || !settings.ambientEnabled || !ambientPlaying) {
+    if (!canPlayEffects()) {
       return;
     }
 
-    var start = now() + 0.04;
-    var chord = AMBIENT_CHORDS[ambientStep % AMBIENT_CHORDS.length];
-    var accent = AMBIENT_NOTES[(ambientStep * 2 + 1) % AMBIENT_NOTES.length];
-    var shimmer = AMBIENT_NOTES[(ambientStep * 3 + 4) % AMBIENT_NOTES.length];
+    var start = currentTime();
+    playTone(392, start, 0.18, "triangle", 0.14, masterGain, { attack: 0.012, release: 0.07 });
+    playTone(523.25, start + 0.14, 0.2, "sine", 0.14, masterGain, { attack: 0.012, release: 0.08 });
+    playTone(659.25, start + 0.3, 0.24, "sine", 0.13, masterGain, { attack: 0.012, release: 0.09 });
+    playTone(783.99, start + 0.5, 0.34, "triangle", 0.11, masterGain, { attack: 0.018, release: 0.12 });
+    playTone(1046.5, start + 0.78, 0.5, "sine", 0.08, masterGain, { attack: 0.02, release: 0.2 });
+  }
 
-    chord.forEach(function (frequency, index) {
-      tone(frequency, start + index * 0.09, 6.2, "sine", 0.017 - index * 0.002, ambientGain, {
-        attack: 1.1,
-        decay: 4.8,
-        detune: (index - 1) * 3
+  function playAmbientPhrase() {
+    if (!audioContext || muted || !ambientEnabled || !ambientPlaying || volume <= 0) {
+      return;
+    }
+
+    var start = currentTime() + 0.03;
+    var noteSpacing = 0.46;
+
+    AMBIENT_NOTES.forEach(function (note, index) {
+      var phraseIndex = (ambientStep + index) % AMBIENT_NOTES.length;
+      var selected = AMBIENT_NOTES[phraseIndex];
+      playTone(selected.frequency, start + index * noteSpacing, 0.82, "triangle", 0.085, ambientGain, {
+        attack: 0.08,
+        release: 0.42,
+        detune: index % 2 === 0 ? -2 : 2
       });
-      tone(frequency * 2, start + 0.35 + index * 0.08, 4.3, "triangle", 0.005, ambientGain, {
-        attack: 1.6,
-        decay: 3.2,
-        detune: 2 - index * 2
-      });
     });
 
-    tone(accent, start + 2.15, 1.45, "sine", 0.012, ambientGain, {
-      attack: 0.18,
-      decay: 1.1
-    });
-    tone(shimmer, start + 5.15, 1.2, "triangle", 0.009, ambientGain, {
-      attack: 0.22,
-      decay: 0.9
+    playTone(110, start, 2.7, "sine", 0.045, ambientGain, {
+      attack: 0.25,
+      release: 1.25
     });
 
-    ambientStep += 1;
+    ambientStep = (ambientStep + 1) % AMBIENT_NOTES.length;
   }
 
   function startAmbientMusic() {
-    if (!resumeAudio() || settings.muted || !settings.ambientEnabled || ambientPlaying) {
+    gameActive = true;
+    if (!initAudio() || muted || !ambientEnabled || ambientPlaying) {
       return;
     }
 
-    ambientPlaying = true;
-    ambientGain.gain.cancelScheduledValues(now());
-    ambientGain.gain.setTargetAtTime(0.12, now(), 0.35);
-    scheduleAmbientPhrase();
-    ambientTimer = window.setInterval(scheduleAmbientPhrase, 7200);
+    resumeAudio().then(function () {
+      if (muted || !ambientEnabled || ambientPlaying) {
+        return;
+      }
+
+      ambientPlaying = true;
+      ambientGain.gain.cancelScheduledValues(currentTime());
+      ambientGain.gain.setTargetAtTime(0.16, currentTime(), 0.08);
+      playAmbientPhrase();
+      ambientTimer = window.setInterval(playAmbientPhrase, 3600);
+      console.log("[Audio] start ambient");
+      console.log("[Audio] settings", getAudioSettings());
+    });
   }
 
   function stopAmbientMusic() {
-    ambientPlaying = false;
     if (ambientTimer) {
       window.clearInterval(ambientTimer);
       ambientTimer = null;
     }
-    activeAmbientOscillators.forEach(function (oscillator) {
+
+    activeAmbientNodes.forEach(function (node) {
       try {
-        oscillator.stop();
+        node.stop();
       } catch (error) {
-        // The oscillator may already have ended; stopping is best effort.
+        // Already stopped.
       }
     });
-    activeAmbientOscillators = [];
-    if (ambientGain && context) {
-      ambientGain.gain.cancelScheduledValues(now());
-      ambientGain.gain.setTargetAtTime(0.0001, now(), 0.08);
+    activeAmbientNodes = [];
+
+    if (ambientGain && audioContext) {
+      ambientGain.gain.cancelScheduledValues(currentTime());
+      ambientGain.gain.setTargetAtTime(0.0001, currentTime(), 0.04);
     }
+
+    ambientPlaying = false;
+    console.log("[Audio] stop ambient");
+    console.log("[Audio] settings", getAudioSettings());
   }
 
   function setMuted(value) {
-    settings.muted = Boolean(value);
-    if (initAudio()) {
-      masterGain.gain.setTargetAtTime(settings.muted ? 0 : settings.volume, now(), 0.02);
-    }
-    if (settings.muted) {
-      stopAmbientMusic();
-    }
+    muted = Boolean(value);
     saveSettings();
+    initAudio();
+
+    if (muted) {
+      stopAmbientMusic();
+    } else if (gameActive && ambientEnabled) {
+      startAmbientMusic();
+    }
+    applyMasterVolume();
   }
 
   function setVolume(value) {
-    settings.volume = clamp(value, 0, 1);
-    if (initAudio() && !settings.muted) {
-      masterGain.gain.setTargetAtTime(settings.volume, now(), 0.02);
-    }
+    volume = clamp(Number(value) || 0, 0, 1);
     saveSettings();
+    initAudio();
+    applyMasterVolume();
+    if (volume > 0 && gameActive && ambientEnabled && !muted) {
+      if (ambientPlaying) {
+        playAmbientPhrase();
+      } else {
+        startAmbientMusic();
+      }
+    }
   }
 
   function setAmbientEnabled(value) {
-    settings.ambientEnabled = Boolean(value);
-    if (!settings.ambientEnabled || settings.muted) {
-      stopAmbientMusic();
-    }
+    ambientEnabled = Boolean(value);
     saveSettings();
+
+    if (!ambientEnabled) {
+      stopAmbientMusic();
+      return;
+    }
+
+    if (gameActive && !muted) {
+      startAmbientMusic();
+    }
   }
 
   function setEffectsEnabled(value) {
-    settings.effectsEnabled = Boolean(value);
+    effectsEnabled = Boolean(value);
     saveSettings();
+  }
+
+  function resetAudioSettings() {
+    muted = false;
+    ambientEnabled = true;
+    effectsEnabled = true;
+    volume = 0.35;
+    saveSettings();
+    initAudio();
+    applyMasterVolume();
+    if (gameActive) {
+      startAmbientMusic();
+    }
+  }
+
+  function setGameActive(value) {
+    gameActive = Boolean(value);
+    if (!gameActive) {
+      stopAmbientMusic();
+    }
   }
 
   function getAudioSettings() {
     return {
-      muted: settings.muted,
-      volume: settings.volume,
-      ambientEnabled: settings.ambientEnabled,
-      effectsEnabled: settings.effectsEnabled,
-      ambientPlaying: ambientPlaying
+      muted: muted,
+      ambientEnabled: ambientEnabled,
+      effectsEnabled: effectsEnabled,
+      volume: volume,
+      ambientPlaying: ambientPlaying,
+      audioContextState: audioContext ? audioContext.state : "non initialisé"
     };
   }
+
+  loadSettings();
 
   window.TreasureGame.Audio = {
     initAudio: initAudio,
@@ -319,10 +368,12 @@
     playTreasureSound: playTreasureSound,
     startAmbientMusic: startAmbientMusic,
     stopAmbientMusic: stopAmbientMusic,
-    setAmbientEnabled: setAmbientEnabled,
     setMuted: setMuted,
     setVolume: setVolume,
+    setAmbientEnabled: setAmbientEnabled,
     setEffectsEnabled: setEffectsEnabled,
+    resetAudioSettings: resetAudioSettings,
+    setGameActive: setGameActive,
     getAudioSettings: getAudioSettings,
 
     init: initAudio,

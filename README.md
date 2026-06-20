@@ -176,9 +176,15 @@ assets/
 
 Les effets sonores sont générés directement dans le navigateur avec la Web Audio API, dans `src/audio.js`.
 
-La musique d'ambiance est elle aussi générée par le code JavaScript : aucun fichier MP3, WAV, CDN ou morceau commercial n'est utilisé. Elle est produite avec des oscillateurs, des accords lents, de petites notes espacées, des enveloppes de volume et un filtre passe-bas pour rester douce et discrète.
+La musique d'ambiance est elle aussi générée par le code JavaScript : aucun fichier MP3, WAV, CDN ou morceau commercial n'est utilisé. Elle est produite avec des oscillateurs, une courte séquence musicale, des enveloppes de volume et un filtre passe-bas pour rester douce mais audible.
 
-Elle démarre après le clic utilisateur sur `JOUER`, quand le navigateur autorise l'AudioContext. Les paramètres permettent de couper tout le son, d'activer ou désactiver la musique d'ambiance et de régler le volume de la musique et des effets. Ces réglages sont sauvegardés dans `localStorage`.
+Elle démarre immédiatement après le clic utilisateur sur `JOUER`, quand le navigateur autorise l'AudioContext. Les paramètres permettent de couper tout le son, d'activer ou désactiver la musique d'ambiance, de régler le volume de 0 à 100 et de réinitialiser les réglages audio sauvegardés dans `localStorage`.
+
+Dans la console navigateur, l'état audio peut être vérifié avec :
+
+```js
+window.TreasureGame.Audio.getAudioSettings()
+```
 
 ## Tests
 
@@ -201,6 +207,8 @@ Vérification interne de la carte, des indices et du trésor :
 ```bash
 node scripts/check-map.js
 ```
+
+Cette commande vérifie l'accessibilité depuis le départ, les zones HUD attendues pour C1 à C6 et T, les textes d'indice, le déclenchement unique de `playClueSound()` par indice et le déclenchement de `playTreasureSound()` au trésor.
 
 ## Prochaines améliorations
 
