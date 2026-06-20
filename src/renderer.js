@@ -169,7 +169,7 @@
     ctx.textBaseline = "middle";
     mapData.buildings.forEach(function (building) {
       // Tiny utility labels add clutter; their color blocks remain visible.
-      if (building.width < 3 || building.height < 2 || building.floor === "STAIRS" || building.id === "cour" || building.id === "passage-bleu") {
+      if (building.width < 3 || building.height < 2 || building.floor === "STAIRS" || building.id === "cour" || building.id.indexOf("couloir-") === 0) {
         return;
       }
       ctx.fillStyle = building.floor === "R+2" ? "#24160d" : "#14202a";

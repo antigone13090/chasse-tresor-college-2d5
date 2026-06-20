@@ -60,13 +60,13 @@
     });
 
     // Quest markers are placed in walkable cells just outside recognizable rooms.
-    grid[17][23] = "C1"; // Vie scolaire
-    grid[22][28] = "C2"; // CDI
-    grid[27][35] = "C3"; // Auditorium
-    grid[14][13] = "C4"; // Gymnase / Preau
-    grid[12][34] = "C5"; // Arts / Musique
-    grid[28][43] = "C6"; // Self eleves
-    grid[23][30] = "T";  // Cour centrale, near Conseils / Multi 1
+    grid[30][25] = "C1"; // Vie scolaire
+    grid[24][31] = "C2"; // CDI
+    grid[21][46] = "C3"; // Auditorium
+    grid[33][17] = "C4"; // Gymnase / Preau
+    grid[17][17] = "C5"; // Arts / Musique
+    grid[18][51] = "C6"; // Self eleves
+    grid[27][43] = "T";  // Cour centrale, near Conseils / Multi 1
 
     return grid;
   }
@@ -126,18 +126,19 @@
     };
   }).concat([
     // Small approach zones make the HUD match the nearby room, not only the courtyard.
-    { id: "abords-vie-scolaire", name: "Vie scolaire", floor: "SPECIAL", color: college.colors.special, collidable: false, x1: 22, y1: 16, x2: 24, y2: 18 },
-    { id: "abords-cdi", name: "CDI", floor: "R+1", color: college.colors.r1, collidable: false, x1: 28, y1: 19, x2: 31, y2: 22 },
-    { id: "abords-auditorium", name: "Auditorium", floor: "SPECIAL", color: college.colors.special, collidable: false, x1: 34, y1: 24, x2: 37, y2: 28 },
-    { id: "abords-gymnase", name: "Gymnase / Préau", floor: "EXT", color: college.colors.path, collidable: false, x1: 12, y1: 13, x2: 15, y2: 15 },
-    { id: "abords-arts-musique", name: "Arts / Musique", floor: "R+1", color: college.colors.r1, collidable: false, x1: 33, y1: 11, x2: 36, y2: 13 },
-    { id: "abords-self", name: "Self élèves", floor: "RDC", color: college.colors.rdc, collidable: false, x1: 41, y1: 27, x2: 45, y2: 29 },
-    { id: "abords-conseils-multi", name: "Conseils / Multi 1", floor: "EXT", color: college.colors.path, collidable: false, x1: 29, y1: 22, x2: 33, y2: 24 },
-    { id: "couloir-gymnase", name: "Passage gymnase / preau", floor: "EXT", color: college.colors.path, collidable: false, x1: 13, y1: 13, x2: 19, y2: 20 },
-    { id: "axe-central", name: "Axe principal", floor: "EXT", color: college.colors.path, collidable: false, x1: 20, y1: 9, x2: 38, y2: 24 },
-    { id: "coursive-self", name: "Coursive self / auditorium", floor: "EXT", color: college.colors.path, collidable: false, x1: 35, y1: 20, x2: 43, y2: 32 },
-    { id: "aile-haute", name: "Aile Arts et Musique", floor: "EXT", color: college.colors.path, collidable: false, x1: 33, y1: 5, x2: 50, y2: 16 },
-    { id: "entree", name: "Entrée principale", floor: "EXT", color: college.colors.path, collidable: false, x1: 13, y1: 18, x2: 19, y2: 22 }
+    { id: "abords-vie-scolaire", name: "Vie scolaire", floor: "SPECIAL", color: college.colors.special, collidable: false, x1: 22, y1: 29, x2: 25, y2: 31 },
+    { id: "abords-cdi", name: "CDI", floor: "R+1", color: college.colors.r1, collidable: false, x1: 29, y1: 23, x2: 34, y2: 25 },
+    { id: "abords-auditorium", name: "Auditorium", floor: "SPECIAL", color: college.colors.special, collidable: false, x1: 45, y1: 20, x2: 48, y2: 24 },
+    { id: "abords-gymnase", name: "Gymnase / Préau", floor: "EXT", color: college.colors.path, collidable: false, x1: 15, y1: 31, x2: 19, y2: 34 },
+    { id: "abords-arts-musique", name: "Arts / Musique", floor: "R+1", color: college.colors.r1, collidable: false, x1: 14, y1: 15, x2: 19, y2: 18 },
+    { id: "abords-self", name: "Self élèves", floor: "RDC", color: college.colors.rdc, collidable: false, x1: 49, y1: 16, x2: 53, y2: 18 },
+    { id: "abords-conseils-multi", name: "Conseils / Multi 1", floor: "EXT", color: college.colors.path, collidable: false, x1: 40, y1: 25, x2: 45, y2: 28 },
+    { id: "couloir-gymnase", name: "Passage gymnase / preau", floor: "EXT", color: college.colors.path, collidable: false, x1: 13, y1: 27, x2: 24, y2: 35 },
+    { id: "axe-central", name: "Axe principal", floor: "EXT", color: college.colors.path, collidable: false, x1: 21, y1: 15, x2: 45, y2: 33 },
+    { id: "coursive-self", name: "Coursive self / auditorium", floor: "EXT", color: college.colors.path, collidable: false, x1: 45, y1: 11, x2: 53, y2: 29 },
+    { id: "aile-haute", name: "Aile Arts et Musique", floor: "EXT", color: college.colors.path, collidable: false, x1: 3, y1: 5, x2: 28, y2: 19 },
+    { id: "aile-basse", name: "Aumônerie / salles 19 à 26", floor: "EXT", color: college.colors.path, collidable: false, x1: 24, y1: 32, x2: 50, y2: 41 },
+    { id: "entree", name: "Entrée principale", floor: "EXT", color: college.colors.path, collidable: false, x1: 20, y1: 29, x2: 25, y2: 33 }
   ]);
 
   var tileColors = {
@@ -226,7 +227,7 @@
     legend: legend,
     buildings: college.buildings,
     landmarks: college.landmarks,
-    start: { x: 15.5, y: 20.5, angle: -0.15 },
+    start: { x: 21.5, y: 32.5, angle: -0.45 },
     cloneGrid: cloneGrid,
     isInside: isInside,
     isBlockingToken: isBlockingToken,
