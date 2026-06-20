@@ -141,6 +141,25 @@
     { id: "entree", name: "Entrée principale", floor: "EXT", color: college.colors.path, collidable: false, x1: 20, y1: 29, x2: 25, y2: 33 }
   ]);
 
+  var zoneDescriptions = {
+    "Vie scolaire": "Point central de la vie quotidienne des élèves.",
+    CDI: "Un lieu pour lire, chercher, apprendre et travailler.",
+    "Gymnase": "Espace sportif pour les activités physiques et collectives.",
+    "Gymnase / Préau": "Espace sportif et passage vers les lieux de vie.",
+    Auditorium: "Lieu de rassemblement, de présentation et d'écoute.",
+    Musique: "Espace dédié à l'écoute et à la pratique musicale.",
+    Arts: "Espace dédié à la créativité.",
+    "Arts / Musique": "Espace dédié à la créativité.",
+    "Aile Arts et Musique": "Secteur des espaces artistiques et musicaux.",
+    "Self élèves": "Lieu de pause et de repas.",
+    "Self adulte": "Secteur du self et des espaces de repas.",
+    "Cour centrale": "Espace de circulation et de rencontre.",
+    "Entrée principale": "Point d'arrivée pour commencer à se repérer.",
+    "Axe principal": "Repère central pour circuler dans le collège.",
+    "Coursive self / auditorium": "Passage vers le self et l'auditorium.",
+    "Conseils / Multi 1": "Zone de passage vers les salles et espaces partagés."
+  };
+
   var tileColors = {
     "1": "#707982",
     W0: college.colors.rdc,
@@ -160,6 +179,16 @@
     { label: "R+2", color: college.colors.r2 },
     { label: "Escaliers", color: college.colors.stairs },
     { label: "Zones spéciales", color: college.colors.special }
+  ];
+
+  var signposts = [
+    { label: "Vie scolaire", x: 24.5, y: 30.5 },
+    { label: "CDI", x: 31.5, y: 24.5 },
+    { label: "Auditorium", x: 46.5, y: 22.5 },
+    { label: "Gymnase", x: 16.5, y: 33.5 },
+    { label: "Arts / Musique", x: 17.5, y: 17.5 },
+    { label: "Self", x: 51.5, y: 17.5 },
+    { label: "Cour centrale", x: 33, y: 22 }
   ];
 
   function cloneGrid(source) {
@@ -192,6 +221,11 @@
   }
 
   function zoneAt(cellX, cellY) {
+    var zone = zoneInfoAt(cellX, cellY);
+    return zone ? zone.name : "Coursive ou chemin";
+  }
+
+  function zoneInfoAt(cellX, cellY) {
     var best = null;
     var bestArea = Infinity;
 
@@ -207,7 +241,15 @@
       }
     }
 
-    return best ? best.name : "Coursive ou chemin";
+    return best;
+  }
+
+  function zoneDescriptionAt(cellX, cellY) {
+    var zone = zoneInfoAt(cellX, cellY);
+    if (!zone) {
+      return "Suis les indices pour progresser dans la visite.";
+    }
+    return zoneDescriptions[zone.name] || "Observe ce lieu pour mieux te repérer dans l'établissement.";
   }
 
   function tileColor(token) {
@@ -225,6 +267,7 @@
     zones: zones,
     clues: clues,
     legend: legend,
+    signposts: signposts,
     buildings: college.buildings,
     landmarks: college.landmarks,
     start: { x: 21.5, y: 32.5, angle: -0.45 },
@@ -234,6 +277,8 @@
     isClueToken: isClueToken,
     findToken: findToken,
     zoneAt: zoneAt,
+    zoneInfoAt: zoneInfoAt,
+    zoneDescriptionAt: zoneDescriptionAt,
     tileColor: tileColor
   };
 })();

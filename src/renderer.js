@@ -37,9 +37,9 @@
     var floor = ctx.createLinearGradient(0, height / 2, 0, height);
 
     ceiling.addColorStop(0, "#2d3943");
-    ceiling.addColorStop(1, "#72818b");
-    floor.addColorStop(0, "#d8d0ba");
-    floor.addColorStop(1, "#8c907b");
+    ceiling.addColorStop(1, "#7e8d95");
+    floor.addColorStop(0, "#ded6c3");
+    floor.addColorStop(1, "#8d967f");
 
     ctx.fillStyle = ceiling;
     ctx.fillRect(0, 0, width, height / 2);
@@ -137,6 +137,76 @@
     });
   }
 
+  function drawRoundedRect(ctx, x, y, width, height, radius) {
+    var r = Math.min(radius, width / 2, height / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + width - r, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+    ctx.lineTo(x + width, y + height - r);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+    ctx.lineTo(x + r, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawSignposts(renderer, player) {
+    var ctx = renderer.ctx;
+    var config = window.TreasureGame.Config;
+    var width = renderer.canvas.width;
+    var height = renderer.canvas.height;
+    var signs = window.TreasureGame.MapData.signposts.slice();
+
+    signs.sort(function (a, b) {
+      var da = Math.hypot(a.x - player.x, a.y - player.y);
+      var db = Math.hypot(b.x - player.x, b.y - player.y);
+      return db - da;
+    });
+
+    signs.forEach(function (sign) {
+      var dx = sign.x - player.x;
+      var dy = sign.y - player.y;
+      var distance = Math.hypot(dx, dy);
+      var angleToSign = Math.atan2(dy, dx) - player.angle;
+
+      while (angleToSign < -Math.PI) {
+        angleToSign += Math.PI * 2;
+      }
+      while (angleToSign > Math.PI) {
+        angleToSign -= Math.PI * 2;
+      }
+
+      if (distance < 1.1 || distance > 13 || Math.abs(angleToSign) > config.fov / 1.55) {
+        return;
+      }
+
+      var screenX = (0.5 + angleToSign / config.fov) * width;
+      var panelWidth = Math.max(78, Math.min(150, 260 / distance));
+      var panelHeight = Math.max(24, Math.min(40, 80 / distance));
+      var x = screenX - panelWidth / 2;
+      var y = height * 0.48 - (height / distance) * 0.12;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.72, 1 - distance / 18);
+      drawRoundedRect(ctx, x, y, panelWidth, panelHeight, 5);
+      ctx.fillStyle = "#dddddd";
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#050505";
+      ctx.stroke();
+      ctx.fillStyle = "#e41616";
+      ctx.fillRect(x + 5, y + 5, panelWidth - 10, Math.max(6, panelHeight * 0.2));
+      ctx.fillStyle = "#050505";
+      ctx.font = "900 " + Math.max(9, Math.min(15, 32 / distance)) + "px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(sign.label, screenX, y + panelHeight * 0.62, panelWidth - 10);
+      ctx.restore();
+    });
+  }
+
   function drawMinimap(renderer, state, player) {
     if (!state.showMinimap) {
       return;
@@ -151,8 +221,11 @@
 
     ctx.save();
     ctx.globalAlpha = 0.92;
-    ctx.fillStyle = "#0b1016";
-    ctx.fillRect(originX - 4, originY - 4, mapWidth + 8, state.grid.length * scale + 8);
+    ctx.fillStyle = "#d8d8d8";
+    ctx.fillRect(originX - 7, originY - 7, mapWidth + 14, state.grid.length * scale + 14);
+    ctx.strokeStyle = "#050505";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(originX - 7, originY - 7, mapWidth + 14, state.grid.length * scale + 14);
 
     for (var y = 0; y < state.grid.length; y += 1) {
       for (var x = 0; x < state.grid[y].length; x += 1) {
@@ -172,7 +245,7 @@
       if (building.width < 3 || building.height < 2 || building.floor === "STAIRS" || building.id === "cour" || building.id.indexOf("couloir-") === 0) {
         return;
       }
-      ctx.fillStyle = building.floor === "R+2" ? "#24160d" : "#14202a";
+      ctx.fillStyle = building.floor === "R+2" ? "#24160d" : "#101820";
       ctx.fillText(
         building.label,
         originX + (building.x + building.width / 2) * scale,
@@ -183,15 +256,29 @@
 
     ctx.font = "8px ui-monospace, Consolas, monospace";
     mapData.landmarks.forEach(function (landmark) {
-      ctx.fillStyle = "#f4f1df";
+      ctx.fillStyle = "#050505";
       ctx.fillText(landmark.label, originX + landmark.x * scale, originY + landmark.y * scale, 64);
     });
 
-    ctx.fillStyle = "#f4f1df";
+    ctx.font = "900 8px system-ui, sans-serif";
+    mapData.signposts.forEach(function (sign) {
+      var signX = originX + sign.x * scale;
+      var signY = originY + sign.y * scale;
+      ctx.fillStyle = "#e41616";
+      ctx.fillRect(signX - 10, signY - 5, 20, 10);
+      ctx.strokeStyle = "#050505";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(signX - 10, signY - 5, 20, 10);
+      ctx.fillStyle = "#050505";
+      ctx.fillText(sign.label, signX, signY + 13, 58);
+    });
+
+    ctx.fillStyle = "#050505";
     ctx.beginPath();
-    ctx.arc(originX + player.x * scale, originY + player.y * scale, 3, 0, Math.PI * 2);
+    ctx.arc(originX + player.x * scale, originY + player.y * scale, 4, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "#f4f1df";
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(originX + player.x * scale, originY + player.y * scale);
     ctx.lineTo(originX + (player.x + Math.cos(player.angle) * 1.5) * scale, originY + (player.y + Math.sin(player.angle) * 1.5) * scale);
@@ -206,8 +293,11 @@
     var width = itemWidth * legend.length;
     var x = canvasWidth - width - 12;
 
-    ctx.fillStyle = "rgba(11, 16, 22, 0.88)";
+    ctx.fillStyle = "rgba(216, 216, 216, 0.94)";
     ctx.fillRect(x - 4, y - 4, width + 8, 18);
+    ctx.strokeStyle = "#050505";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - 4, y - 4, width + 8, 18);
     ctx.font = "8px ui-monospace, Consolas, monospace";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
@@ -216,7 +306,7 @@
       var itemX = x + index * itemWidth;
       ctx.fillStyle = item.color;
       ctx.fillRect(itemX, y, 9, 9);
-      ctx.fillStyle = "#f4f1df";
+      ctx.fillStyle = "#050505";
       ctx.fillText(item.label, itemX + 12, y + 5);
     });
   }
@@ -229,6 +319,7 @@
       drawWallColumn(renderer, rays[i], i);
     }
 
+    drawSignposts(renderer, player);
     drawSprites(renderer, state, player);
     drawMinimap(renderer, state, player);
   }

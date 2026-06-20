@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chasse au trésor du collège</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,13 +17,39 @@
         <span class="screw top-right" aria-hidden="true"></span>
         <span class="screw bottom-left" aria-hidden="true"></span>
         <span class="screw bottom-right" aria-hidden="true"></span>
-        <p class="kicker">Jeu 2.5D éducatif</p>
-        <h1>CHASSE AU TRÉSOR DU COLLÈGE</h1>
+        <header class="menu-title">
+          <p class="kicker">Jeu 2.5D éducatif</p>
+          <h1>CHASSE AU TRÉSOR</h1>
+          <p class="school-name">Collège Sacré-Cœur d’Aix</p>
+        </header>
+        <p class="intro-copy">Bienvenue au collège Sacré-Cœur d’Aix. Explore les lieux importants de l’établissement, découvre les indices, traverse les espaces de vie du collège et retrouve le trésor final.</p>
         <nav class="menu-actions" aria-label="Navigation du menu">
           <button id="play-button" class="arcade-button" type="button">JOUER</button>
+          <button id="discover-button" class="arcade-button secondary" type="button">DÉCOUVRIR LE COLLÈGE</button>
           <button id="settings-button" class="arcade-button" type="button">PARAMÈTRES</button>
           <button id="credits-button" class="arcade-button" type="button">CRÉDITS</button>
         </nav>
+      </div>
+    </section>
+
+    <section id="discover-screen" class="screen" aria-label="Découvrir le collège">
+      <div class="menu-panel arcade-panel detail-panel">
+        <span class="screw top-left" aria-hidden="true"></span>
+        <span class="screw top-right" aria-hidden="true"></span>
+        <span class="screw bottom-left" aria-hidden="true"></span>
+        <span class="screw bottom-right" aria-hidden="true"></span>
+        <h2>DÉCOUVRIR</h2>
+        <p>Le Sacré-Cœur d’Aix est un ensemble scolaire situé à Aix-en-Provence. Le jeu propose une visite ludique du collège à travers ses espaces : cour, vie scolaire, CDI, arts, musique, auditorium, gymnase et self.</p>
+        <p>Dans cette chasse au trésor, chaque lieu devient une étape pour apprendre à se repérer dans l’établissement.</p>
+        <ul class="place-list" aria-label="Lieux mis en valeur">
+          <li>Vie scolaire</li>
+          <li>CDI</li>
+          <li>Arts / Musique</li>
+          <li>Gymnase</li>
+          <li>Auditorium</li>
+          <li>Self</li>
+        </ul>
+        <button id="discover-back-button" class="arcade-button" type="button">RETOUR</button>
       </div>
     </section>
 
@@ -79,8 +106,12 @@
         <strong id="clue-count">0 / 6</strong>
       </div>
       <div class="hud-card compact">
-        <span class="label">Zone</span>
+        <span class="label">Lieu actuel</span>
         <strong id="zone-text">Entrée</strong>
+      </div>
+      <div id="place-card" class="hud-card place">
+        <span class="label">Repère</span>
+        <strong id="place-description">Observe les espaces du collège.</strong>
       </div>
       <div id="interaction-prompt" class="prompt hidden">Appuie sur E pour interagir</div>
       <div id="message" class="message hidden"></div>

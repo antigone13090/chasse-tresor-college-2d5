@@ -8,7 +8,7 @@
   }
 
   function setScreen(id) {
-    ["main-menu", "settings-screen", "credits-screen", "pause-screen"].forEach(function (screenId) {
+    ["main-menu", "discover-screen", "settings-screen", "credits-screen", "pause-screen"].forEach(function (screenId) {
       byId(screenId).classList.toggle("active", screenId === id);
     });
   }
@@ -17,6 +17,12 @@
     var instructionsToggle = byId("instructions-toggle");
 
     byId("play-button").addEventListener("click", game.start);
+    byId("discover-button").addEventListener("click", function () {
+      setScreen("discover-screen");
+    });
+    byId("discover-back-button").addEventListener("click", function () {
+      setScreen("main-menu");
+    });
     byId("settings-button").addEventListener("click", function () {
       setScreen("settings-screen");
     });
@@ -48,12 +54,14 @@
     var debug = byId("debug-panel");
     var cellX = Math.floor(player.x);
     var cellY = Math.floor(player.y);
+    var zoneName = window.TreasureGame.MapData.zoneAt(cellX, cellY);
 
     hud.classList.toggle("hidden", state.mode !== "playing" && state.mode !== "paused");
     objectiveCard.classList.toggle("hidden", !state.showInstructions);
     byId("objective-text").textContent = state.objective;
     byId("clue-count").textContent = state.foundClues + " / " + window.TreasureGame.Config.clueTotal;
-    byId("zone-text").textContent = window.TreasureGame.MapData.zoneAt(cellX, cellY);
+    byId("zone-text").textContent = zoneName;
+    byId("place-description").textContent = window.TreasureGame.MapData.zoneDescriptionAt(cellX, cellY);
 
     prompt.classList.toggle("hidden", state.mode !== "playing" || !state.currentInteraction);
 
@@ -66,7 +74,7 @@
         "Mode professeur",
         "Position : " + player.x.toFixed(2) + ", " + player.y.toFixed(2),
         "Case : " + cellX + ", " + cellY,
-        "Zone : " + window.TreasureGame.MapData.zoneAt(cellX, cellY),
+        "Zone : " + zoneName,
         "Direction : " + player.angle.toFixed(2) + " rad",
         "FPS : " + state.fps.toFixed(0),
         "Indice actuel : " + Math.min(state.foundClues + 1, window.TreasureGame.Config.clueTotal)
