@@ -10,7 +10,12 @@
 
   function resetGame() {
     state = window.TreasureGame.GameState.create();
+    state.showInstructions = window.TreasureGame.UI.getInstructionsVisible();
     player = window.TreasureGame.Player.create();
+  }
+
+  function setInstructionsVisible(visible) {
+    state.showInstructions = visible;
   }
 
   function start() {
@@ -79,7 +84,8 @@
   window.TreasureGame.UI.bindMenus({
     start: start,
     resume: resume,
-    backToMenu: backToMenu
+    backToMenu: backToMenu,
+    setInstructionsVisible: setInstructionsVisible
   });
 
   requestAnimationFrame(frame);

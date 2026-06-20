@@ -11,35 +11,66 @@
     <canvas id="game-canvas" width="960" height="540" aria-label="Jeu 2.5D de chasse au trésor"></canvas>
 
     <section id="main-menu" class="screen active" aria-label="Menu principal">
-      <div class="menu-panel">
-        <p class="kicker">FPS 2.5D éducatif</p>
-        <h1>Chasse au trésor du collège</h1>
-        <button id="play-button" type="button">Jouer</button>
-        <button id="rules-button" type="button">Règles</button>
-        <button id="quit-button" type="button">Quitter / Retour</button>
+      <div class="menu-panel arcade-panel">
+        <span class="screw top-left" aria-hidden="true"></span>
+        <span class="screw top-right" aria-hidden="true"></span>
+        <span class="screw bottom-left" aria-hidden="true"></span>
+        <span class="screw bottom-right" aria-hidden="true"></span>
+        <p class="kicker">Jeu 2.5D éducatif</p>
+        <h1>CHASSE AU TRÉSOR DU COLLÈGE</h1>
+        <nav class="menu-actions" aria-label="Navigation du menu">
+          <button id="play-button" class="arcade-button" type="button">JOUER</button>
+          <button id="settings-button" class="arcade-button" type="button">PARAMÈTRES</button>
+          <button id="credits-button" class="arcade-button" type="button">CRÉDITS</button>
+        </nav>
       </div>
     </section>
 
-    <section id="rules-screen" class="screen" aria-label="Règles du jeu">
-      <div class="menu-panel rules">
-        <h2>Règles</h2>
-        <p>Trouve les 6 indices dans l'ordre, puis récupère le trésor final.</p>
-        <p>Explore la Vie scolaire, le CDI, l'auditorium, le gymnase, Arts/Musique et le self élèves.</p>
-        <p>Les couleurs de la mini-carte indiquent les niveaux, les escaliers et les zones spéciales.</p>
-        <button id="rules-back-button" type="button">Retour</button>
+    <section id="settings-screen" class="screen" aria-label="Paramètres">
+      <div class="menu-panel arcade-panel detail-panel">
+        <span class="screw top-left" aria-hidden="true"></span>
+        <span class="screw top-right" aria-hidden="true"></span>
+        <span class="screw bottom-left" aria-hidden="true"></span>
+        <span class="screw bottom-right" aria-hidden="true"></span>
+        <h2>PARAMÈTRES</h2>
+        <label class="toggle-row" for="instructions-toggle">
+          <input id="instructions-toggle" type="checkbox" checked>
+          <span>Afficher les consignes</span>
+        </label>
+        <p class="panel-line">Son : non disponible pour le moment</p>
+        <button id="settings-back-button" class="arcade-button" type="button">RETOUR</button>
+      </div>
+    </section>
+
+    <section id="credits-screen" class="screen" aria-label="Crédits">
+      <div class="menu-panel arcade-panel detail-panel">
+        <span class="screw top-left" aria-hidden="true"></span>
+        <span class="screw top-right" aria-hidden="true"></span>
+        <span class="screw bottom-left" aria-hidden="true"></span>
+        <span class="screw bottom-right" aria-hidden="true"></span>
+        <h2>CRÉDITS</h2>
+        <p>Jeu de chasse au trésor du collège</p>
+        <p>Carte inspirée du plan du collège</p>
+        <p>Interface inspirée d’une maquette réalisée par un élève</p>
+        <p>Développement : projet pédagogique NSI / technologie</p>
+        <button id="credits-back-button" class="arcade-button" type="button">RETOUR</button>
       </div>
     </section>
 
     <section id="pause-screen" class="screen" aria-label="Pause">
-      <div class="menu-panel small">
-        <h2>Pause</h2>
-        <button id="resume-button" type="button">Reprendre</button>
-        <button id="pause-menu-button" type="button">Menu principal</button>
+      <div class="menu-panel arcade-panel small">
+        <span class="screw top-left" aria-hidden="true"></span>
+        <span class="screw top-right" aria-hidden="true"></span>
+        <span class="screw bottom-left" aria-hidden="true"></span>
+        <span class="screw bottom-right" aria-hidden="true"></span>
+        <h2>PAUSE</h2>
+        <button id="resume-button" class="arcade-button" type="button">REPRENDRE</button>
+        <button id="pause-menu-button" class="arcade-button" type="button">MENU PRINCIPAL</button>
       </div>
     </section>
 
     <div id="hud" class="hud hidden">
-      <div class="hud-card">
+      <div id="objective-card" class="hud-card">
         <span class="label">Objectif</span>
         <strong id="objective-text">Commence la chasse au trésor.</strong>
       </div>

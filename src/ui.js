@@ -8,28 +8,41 @@
   }
 
   function setScreen(id) {
-    ["main-menu", "rules-screen", "pause-screen"].forEach(function (screenId) {
+    ["main-menu", "settings-screen", "credits-screen", "pause-screen"].forEach(function (screenId) {
       byId(screenId).classList.toggle("active", screenId === id);
     });
   }
 
   function bindMenus(game) {
+    var instructionsToggle = byId("instructions-toggle");
+
     byId("play-button").addEventListener("click", game.start);
-    byId("rules-button").addEventListener("click", function () {
-      setScreen("rules-screen");
+    byId("settings-button").addEventListener("click", function () {
+      setScreen("settings-screen");
     });
-    byId("rules-back-button").addEventListener("click", function () {
+    byId("settings-back-button").addEventListener("click", function () {
       setScreen("main-menu");
     });
-    byId("quit-button").addEventListener("click", function () {
+    byId("credits-button").addEventListener("click", function () {
+      setScreen("credits-screen");
+    });
+    byId("credits-back-button").addEventListener("click", function () {
       setScreen("main-menu");
+    });
+    instructionsToggle.addEventListener("change", function () {
+      game.setInstructionsVisible(instructionsToggle.checked);
     });
     byId("resume-button").addEventListener("click", game.resume);
     byId("pause-menu-button").addEventListener("click", game.backToMenu);
   }
 
+  function getInstructionsVisible() {
+    return byId("instructions-toggle").checked;
+  }
+
   function updateHud(state, player) {
     var hud = byId("hud");
+    var objectiveCard = byId("objective-card");
     var prompt = byId("interaction-prompt");
     var message = byId("message");
     var debug = byId("debug-panel");
@@ -37,6 +50,7 @@
     var cellY = Math.floor(player.y);
 
     hud.classList.toggle("hidden", state.mode !== "playing" && state.mode !== "paused");
+    objectiveCard.classList.toggle("hidden", !state.showInstructions);
     byId("objective-text").textContent = state.objective;
     byId("clue-count").textContent = state.foundClues + " / " + window.TreasureGame.Config.clueTotal;
     byId("zone-text").textContent = window.TreasureGame.MapData.zoneAt(cellX, cellY);
@@ -62,6 +76,7 @@
 
   window.TreasureGame.UI = {
     bindMenus: bindMenus,
+    getInstructionsVisible: getInstructionsVisible,
     setScreen: setScreen,
     updateHud: updateHud
   };

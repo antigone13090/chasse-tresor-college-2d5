@@ -14,6 +14,7 @@
       objective: "Trouve l'indice 1 à la Vie scolaire.",
       temporaryMessage: "",
       messageTime: 0,
+      showInstructions: true,
       showMinimap: true,
       showDebug: false,
       fps: 0
