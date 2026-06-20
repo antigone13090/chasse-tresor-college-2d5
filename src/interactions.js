@@ -56,6 +56,9 @@
     state.collected[interaction.token] = true;
     state.grid[interaction.y][interaction.x] = "0";
     state.objective = clue.objective;
+    if (window.TreasureGame.Audio) {
+      window.TreasureGame.Audio.playClueSound();
+    }
     window.TreasureGame.GameState.setMessage(state, clue.title + " : " + clue.text, 6);
   }
 
@@ -78,6 +81,10 @@
     state.treasureFound = true;
     state.grid[interaction.y][interaction.x] = "0";
     state.objective = "Victoire : tu as terminé la chasse au trésor.";
+    if (window.TreasureGame.Audio) {
+      window.TreasureGame.Audio.playTreasureSound();
+      window.TreasureGame.Audio.stopAmbientLoop();
+    }
     window.TreasureGame.GameState.setMessage(state, "Victoire ! Tu as trouvé le trésor du collège.", 8);
   }
 

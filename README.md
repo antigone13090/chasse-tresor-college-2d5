@@ -97,6 +97,7 @@ src/
   input.js
   interactions.js
   gameState.js
+  audio.js
   ui.js
 ```
 
@@ -171,9 +172,16 @@ src/
 assets/
 ```
 
+## Audio
+
+Les effets sonores et l'ambiance sont générés directement dans le navigateur avec la Web Audio API, dans `src/audio.js`.
+
+Aucun fichier audio externe, CDN ou morceau commercial n'est utilisé. Les sons sont produits par le code du projet avec des oscillateurs simples : clics de boutons, ouverture de panneau, indice trouvé, trésor trouvé et ambiance discrète optionnelle.
+
+Le son peut être désactivé dans les paramètres. Le volume global et l'ambiance sonore sont sauvegardés dans `localStorage`.
+
 ## Prochaines améliorations
 
-- ajouter des sons libres de droits ;
 - ajouter un chronomètre ;
 - ajouter un score ;
 - ajouter des énigmes avec réponses ;

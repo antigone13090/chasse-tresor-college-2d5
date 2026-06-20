@@ -13,33 +13,160 @@
     });
   }
 
+  function setToggleLabel(input, enabledText, disabledText) {
+    var label = input.parentElement.querySelector("span");
+    if (label) {
+      label.textContent = input.checked ? enabledText : disabledText;
+    }
+  }
+
+  function loadInstructionsVisible() {
+    try {
+      var stored = localStorage.getItem("treasureGameShowInstructions");
+      return stored === null ? true : stored === "true";
+    } catch (error) {
+      return true;
+    }
+  }
+
+  function saveInstructionsVisible(visible) {
+    try {
+      localStorage.setItem("treasureGameShowInstructions", String(visible));
+    } catch (error) {
+      // Local storage can be unavailable; the current game session still updates.
+    }
+  }
+
+  function syncAudioControls() {
+    var audio = window.TreasureGame.Audio;
+    var settings = audio ? audio.getSettings() : { muted: true, volume: 0.45, ambientEnabled: false };
+    var soundToggle = byId("sound-toggle");
+    var ambientToggle = byId("ambient-toggle");
+    var volumeSlider = byId("volume-slider");
+
+    soundToggle.checked = !settings.muted;
+    ambientToggle.checked = settings.ambientEnabled;
+    volumeSlider.value = Math.round(settings.volume * 100);
+    byId("volume-value").textContent = volumeSlider.value;
+    setToggleLabel(soundToggle, "Son : activé", "Son : désactivé");
+    setToggleLabel(ambientToggle, "Ambiance sonore : activée", "Ambiance sonore : désactivée");
+  }
+
+  function initMenusFromStorage() {
+    var instructionsToggle = byId("instructions-toggle");
+    instructionsToggle.checked = loadInstructionsVisible();
+    setToggleLabel(instructionsToggle, "Afficher les consignes : activé", "Afficher les consignes : désactivé");
+    syncAudioControls();
+  }
+
   function bindMenus(game) {
     var instructionsToggle = byId("instructions-toggle");
+    var soundToggle = byId("sound-toggle");
+    var ambientToggle = byId("ambient-toggle");
+    var volumeSlider = byId("volume-slider");
+    var audio = window.TreasureGame.Audio;
 
-    byId("play-button").addEventListener("click", game.start);
+    initMenusFromStorage();
+
+    byId("play-button").addEventListener("click", function () {
+      if (audio) {
+        audio.init();
+        audio.playClickSound();
+      }
+      game.start();
+    });
     byId("discover-button").addEventListener("click", function () {
+      if (audio) {
+        audio.init();
+        audio.playPanelSound();
+      }
       setScreen("discover-screen");
     });
     byId("discover-back-button").addEventListener("click", function () {
+      if (audio) {
+        audio.playClickSound();
+      }
       setScreen("main-menu");
     });
     byId("settings-button").addEventListener("click", function () {
+      if (audio) {
+        audio.init();
+        audio.playPanelSound();
+      }
       setScreen("settings-screen");
     });
     byId("settings-back-button").addEventListener("click", function () {
+      if (audio) {
+        audio.playClickSound();
+      }
       setScreen("main-menu");
     });
     byId("credits-button").addEventListener("click", function () {
+      if (audio) {
+        audio.init();
+        audio.playPanelSound();
+      }
       setScreen("credits-screen");
     });
     byId("credits-back-button").addEventListener("click", function () {
+      if (audio) {
+        audio.playClickSound();
+      }
       setScreen("main-menu");
     });
+    soundToggle.addEventListener("change", function () {
+      if (audio) {
+        audio.init();
+        audio.setMuted(!soundToggle.checked);
+        if (soundToggle.checked) {
+          audio.playPanelSound();
+        }
+      }
+      setToggleLabel(soundToggle, "Son : activé", "Son : désactivé");
+    });
+    ambientToggle.addEventListener("change", function () {
+      if (audio) {
+        audio.init();
+        audio.setAmbientEnabled(ambientToggle.checked);
+        audio.playPanelSound();
+        if (!ambientToggle.checked) {
+          audio.stopAmbientLoop();
+        }
+      }
+      setToggleLabel(ambientToggle, "Ambiance sonore : activée", "Ambiance sonore : désactivée");
+    });
+    volumeSlider.addEventListener("input", function () {
+      byId("volume-value").textContent = volumeSlider.value;
+      if (audio) {
+        audio.setVolume(Number(volumeSlider.value) / 100);
+      }
+    });
+    volumeSlider.addEventListener("change", function () {
+      if (audio) {
+        audio.playPanelSound();
+      }
+    });
     instructionsToggle.addEventListener("change", function () {
+      if (audio) {
+        audio.playPanelSound();
+      }
+      setToggleLabel(instructionsToggle, "Afficher les consignes : activé", "Afficher les consignes : désactivé");
+      saveInstructionsVisible(instructionsToggle.checked);
       game.setInstructionsVisible(instructionsToggle.checked);
     });
-    byId("resume-button").addEventListener("click", game.resume);
-    byId("pause-menu-button").addEventListener("click", game.backToMenu);
+    byId("resume-button").addEventListener("click", function () {
+      if (audio) {
+        audio.playClickSound();
+      }
+      game.resume();
+    });
+    byId("pause-menu-button").addEventListener("click", function () {
+      if (audio) {
+        audio.playClickSound();
+        audio.stopAmbientLoop();
+      }
+      game.backToMenu();
+    });
   }
 
   function getInstructionsVisible() {

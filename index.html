@@ -60,11 +60,23 @@
         <span class="screw bottom-left" aria-hidden="true"></span>
         <span class="screw bottom-right" aria-hidden="true"></span>
         <h2>PARAMÈTRES</h2>
+        <label class="toggle-row" for="sound-toggle">
+          <input id="sound-toggle" type="checkbox" checked>
+          <span>Son : activé</span>
+        </label>
+        <label class="range-row" for="volume-slider">
+          <span>Volume</span>
+          <input id="volume-slider" type="range" min="0" max="100" value="45">
+          <strong id="volume-value">45</strong>
+        </label>
+        <label class="toggle-row" for="ambient-toggle">
+          <input id="ambient-toggle" type="checkbox" checked>
+          <span>Ambiance sonore : activée</span>
+        </label>
         <label class="toggle-row" for="instructions-toggle">
           <input id="instructions-toggle" type="checkbox" checked>
-          <span>Afficher les consignes</span>
+          <span>Afficher les consignes : activé</span>
         </label>
-        <p class="panel-line">Son : non disponible pour le moment</p>
         <button id="settings-back-button" class="arcade-button" type="button">RETOUR</button>
       </div>
     </section>
@@ -78,7 +90,8 @@
         <h2>CRÉDITS</h2>
         <p>Jeu de chasse au trésor du collège</p>
         <p>Carte inspirée du plan du collège</p>
-        <p>Interface inspirée d’une maquette réalisée par un élève</p>
+        <p>Interface inspirée d’une maquette réalisée par Dimitri, élève de 5A</p>
+        <p>Maquette d’interface : Dimitri, 5A</p>
         <p>Développement : projet pédagogique NSI / technologie</p>
         <button id="credits-back-button" class="arcade-button" type="button">RETOUR</button>
       </div>
@@ -128,6 +141,7 @@
   <script src="src/raycaster.js"></script>
   <script src="src/renderer.js"></script>
   <script src="src/interactions.js"></script>
+  <script src="src/audio.js"></script>
   <script src="src/ui.js"></script>
   <script src="src/main.js"></script>
 </body>
