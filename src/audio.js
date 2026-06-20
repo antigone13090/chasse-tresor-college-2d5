@@ -7,15 +7,31 @@
   var context = null;
   var masterGain = null;
   var ambientGain = null;
+  var ambientFilter = null;
   var ambientTimer = null;
+  var ambientRunning = false;
+  var ambientStep = 0;
   var initialized = false;
   var settings = loadSettings();
+
+  var AMBIENT_CHORDS = [
+    [196, 246.94, 329.63],
+    [174.61, 220, 293.66],
+    [164.81, 246.94, 311.13],
+    [185, 233.08, 293.66]
+  ];
+  var AMBIENT_NOTES = [392, 329.63, 440, 369.99, 493.88, 415.3];
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
 
   function loadSettings() {
     var defaults = {
       muted: false,
       volume: 0.45,
-      ambientEnabled: true
+      ambientEnabled: true,
+      effectsEnabled: true
     };
 
     try {
@@ -26,7 +42,8 @@
       return {
         muted: Boolean(stored.muted),
         volume: typeof stored.volume === "number" ? clamp(stored.volume, 0, 1) : defaults.volume,
-        ambientEnabled: stored.ambientEnabled !== false
+        ambientEnabled: stored.ambientEnabled !== false,
+        effectsEnabled: stored.effectsEnabled !== false
       };
     } catch (error) {
       return defaults;
@@ -41,11 +58,7 @@
     }
   }
 
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-  }
-
-  function ensureContext() {
+  function initAudio() {
     if (initialized) {
       if (context && context.state === "suspended") {
         context.resume();
@@ -61,9 +74,16 @@
     context = new AudioContext();
     masterGain = context.createGain();
     ambientGain = context.createGain();
+    ambientFilter = context.createBiquadFilter();
+
     masterGain.gain.value = settings.muted ? 0 : settings.volume;
     ambientGain.gain.value = 0.12;
-    ambientGain.connect(masterGain);
+    ambientFilter.type = "lowpass";
+    ambientFilter.frequency.value = 1450;
+    ambientFilter.Q.value = 0.45;
+
+    ambientGain.connect(ambientFilter);
+    ambientFilter.connect(masterGain);
     masterGain.connect(context.destination);
     initialized = true;
     return true;
@@ -80,20 +100,30 @@
     gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustain), start + attack + decay);
   }
 
-  function tone(frequency, start, duration, type, peak, destination) {
+  function tone(frequency, start, duration, type, peak, destination, options) {
     var oscillator = context.createOscillator();
     var gain = context.createGain();
+    var detune = options && options.detune ? options.detune : 0;
+
     oscillator.type = type || "sine";
     oscillator.frequency.setValueAtTime(frequency, start);
-    setEnvelope(gain, start, 0.012, Math.max(0.03, duration - 0.012), peak, 0.0001);
+    oscillator.detune.setValueAtTime(detune, start);
+    setEnvelope(
+      gain,
+      start,
+      options && options.attack !== undefined ? options.attack : 0.012,
+      options && options.decay !== undefined ? options.decay : Math.max(0.03, duration - 0.012),
+      peak,
+      options && options.sustain !== undefined ? options.sustain : 0.0001
+    );
     oscillator.connect(gain);
     gain.connect(destination || masterGain);
     oscillator.start(start);
-    oscillator.stop(start + duration + 0.03);
+    oscillator.stop(start + duration + 0.08);
   }
 
   function playSequence(notes) {
-    if (!ensureContext() || settings.muted) {
+    if (!initAudio() || settings.muted || !settings.effectsEnabled) {
       return;
     }
     var start = now();
@@ -104,82 +134,128 @@
         note.duration || 0.12,
         note.type || "sine",
         note.peak || 0.12,
-        note.destination
+        note.destination,
+        note.options
       );
     });
   }
 
   function playClickSound() {
     playSequence([
-      { frequency: 520, duration: 0.045, type: "square", peak: 0.07 },
-      { frequency: 760, delay: 0.035, duration: 0.055, type: "triangle", peak: 0.045 }
+      { frequency: 520, duration: 0.045, type: "square", peak: 0.055 },
+      { frequency: 760, delay: 0.035, duration: 0.055, type: "triangle", peak: 0.04 }
     ]);
   }
 
   function playPanelSound() {
     playSequence([
-      { frequency: 330, duration: 0.08, type: "triangle", peak: 0.06 },
-      { frequency: 440, delay: 0.06, duration: 0.1, type: "sine", peak: 0.05 }
+      { frequency: 330, duration: 0.08, type: "triangle", peak: 0.055 },
+      { frequency: 440, delay: 0.06, duration: 0.1, type: "sine", peak: 0.045 }
     ]);
   }
 
   function playClueSound() {
     playSequence([
-      { frequency: 523.25, duration: 0.12, type: "sine", peak: 0.08 },
-      { frequency: 659.25, delay: 0.1, duration: 0.14, type: "sine", peak: 0.075 },
-      { frequency: 783.99, delay: 0.22, duration: 0.18, type: "triangle", peak: 0.07 }
+      { frequency: 523.25, duration: 0.12, type: "sine", peak: 0.075 },
+      { frequency: 659.25, delay: 0.1, duration: 0.14, type: "sine", peak: 0.07 },
+      { frequency: 783.99, delay: 0.22, duration: 0.18, type: "triangle", peak: 0.06 }
     ]);
   }
 
+  function duckAmbient(duration) {
+    if (!ambientGain || !ambientRunning) {
+      return;
+    }
+    var start = now();
+    ambientGain.gain.cancelScheduledValues(start);
+    ambientGain.gain.setTargetAtTime(0.035, start, 0.08);
+    ambientGain.gain.setTargetAtTime(0.12, start + duration, 0.9);
+  }
+
   function playTreasureSound() {
+    duckAmbient(2.2);
     playSequence([
       { frequency: 392, duration: 0.13, type: "triangle", peak: 0.08 },
       { frequency: 523.25, delay: 0.1, duration: 0.16, type: "sine", peak: 0.085 },
       { frequency: 659.25, delay: 0.22, duration: 0.2, type: "sine", peak: 0.08 },
-      { frequency: 1046.5, delay: 0.4, duration: 0.28, type: "triangle", peak: 0.06 }
+      { frequency: 1046.5, delay: 0.4, duration: 0.28, type: "triangle", peak: 0.055 },
+      { frequency: 783.99, delay: 0.68, duration: 0.42, type: "sine", peak: 0.045 }
     ]);
   }
 
-  function playAmbientPulse() {
-    if (!context || settings.muted || !settings.ambientEnabled || !ambientTimer) {
+  function scheduleAmbientPhrase() {
+    if (!context || settings.muted || !settings.ambientEnabled || !ambientRunning) {
       return;
     }
 
-    var start = now();
-    tone(196, start, 1.8, "sine", 0.035, ambientGain);
-    tone(246.94, start + 0.9, 1.4, "sine", 0.025, ambientGain);
-    tone(329.63, start + 1.8, 1.2, "triangle", 0.018, ambientGain);
+    var start = now() + 0.04;
+    var chord = AMBIENT_CHORDS[ambientStep % AMBIENT_CHORDS.length];
+    var accent = AMBIENT_NOTES[(ambientStep * 2 + 1) % AMBIENT_NOTES.length];
+    var shimmer = AMBIENT_NOTES[(ambientStep * 3 + 4) % AMBIENT_NOTES.length];
+
+    chord.forEach(function (frequency, index) {
+      tone(frequency, start + index * 0.09, 6.2, "sine", 0.017 - index * 0.002, ambientGain, {
+        attack: 1.1,
+        decay: 4.8,
+        detune: (index - 1) * 3
+      });
+      tone(frequency * 2, start + 0.35 + index * 0.08, 4.3, "triangle", 0.005, ambientGain, {
+        attack: 1.6,
+        decay: 3.2,
+        detune: 2 - index * 2
+      });
+    });
+
+    tone(accent, start + 2.15, 1.45, "sine", 0.012, ambientGain, {
+      attack: 0.18,
+      decay: 1.1
+    });
+    tone(shimmer, start + 5.15, 1.2, "triangle", 0.009, ambientGain, {
+      attack: 0.22,
+      decay: 0.9
+    });
+
+    ambientStep += 1;
   }
 
-  function startAmbientLoop() {
-    if (!ensureContext() || settings.muted || !settings.ambientEnabled || ambientTimer) {
+  function startAmbientMusic() {
+    if (!initAudio() || settings.muted || !settings.ambientEnabled || ambientRunning) {
       return;
     }
-    playAmbientPulse();
-    ambientTimer = window.setInterval(playAmbientPulse, 4200);
+
+    ambientRunning = true;
+    ambientGain.gain.cancelScheduledValues(now());
+    ambientGain.gain.setTargetAtTime(0.12, now(), 0.35);
+    scheduleAmbientPhrase();
+    ambientTimer = window.setInterval(scheduleAmbientPhrase, 7200);
   }
 
-  function stopAmbientLoop() {
+  function stopAmbientMusic() {
+    ambientRunning = false;
     if (ambientTimer) {
       window.clearInterval(ambientTimer);
       ambientTimer = null;
+    }
+    if (ambientGain && context) {
+      ambientGain.gain.cancelScheduledValues(now());
+      ambientGain.gain.setTargetAtTime(0.0001, now(), 0.08);
     }
   }
 
   function setMuted(value) {
     settings.muted = Boolean(value);
-    if (ensureContext()) {
+    if (initAudio()) {
       masterGain.gain.setTargetAtTime(settings.muted ? 0 : settings.volume, now(), 0.02);
     }
     if (settings.muted) {
-      stopAmbientLoop();
+      stopAmbientMusic();
     }
     saveSettings();
   }
 
   function setVolume(value) {
     settings.volume = clamp(value, 0, 1);
-    if (ensureContext() && !settings.muted) {
+    if (initAudio() && !settings.muted) {
       masterGain.gain.setTargetAtTime(settings.volume, now(), 0.02);
     }
     saveSettings();
@@ -187,31 +263,43 @@
 
   function setAmbientEnabled(value) {
     settings.ambientEnabled = Boolean(value);
-    if (!settings.ambientEnabled) {
-      stopAmbientLoop();
+    if (!settings.ambientEnabled || settings.muted) {
+      stopAmbientMusic();
     }
     saveSettings();
   }
 
-  function getSettings() {
+  function setEffectsEnabled(value) {
+    settings.effectsEnabled = Boolean(value);
+    saveSettings();
+  }
+
+  function getAudioSettings() {
     return {
       muted: settings.muted,
       volume: settings.volume,
-      ambientEnabled: settings.ambientEnabled
+      ambientEnabled: settings.ambientEnabled,
+      effectsEnabled: settings.effectsEnabled
     };
   }
 
   window.TreasureGame.Audio = {
-    init: ensureContext,
+    initAudio: initAudio,
     playClickSound: playClickSound,
+    playPanelSound: playPanelSound,
     playClueSound: playClueSound,
     playTreasureSound: playTreasureSound,
-    playPanelSound: playPanelSound,
-    startAmbientLoop: startAmbientLoop,
-    stopAmbientLoop: stopAmbientLoop,
+    startAmbientMusic: startAmbientMusic,
+    stopAmbientMusic: stopAmbientMusic,
+    setAmbientEnabled: setAmbientEnabled,
     setMuted: setMuted,
     setVolume: setVolume,
-    setAmbientEnabled: setAmbientEnabled,
-    getSettings: getSettings
+    setEffectsEnabled: setEffectsEnabled,
+    getAudioSettings: getAudioSettings,
+
+    init: initAudio,
+    startAmbientLoop: startAmbientMusic,
+    stopAmbientLoop: stopAmbientMusic,
+    getSettings: getAudioSettings
   };
 })();

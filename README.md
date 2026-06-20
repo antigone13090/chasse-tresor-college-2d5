@@ -174,11 +174,33 @@ assets/
 
 ## Audio
 
-Les effets sonores et l'ambiance sont générés directement dans le navigateur avec la Web Audio API, dans `src/audio.js`.
+Les effets sonores et la musique d'ambiance sont générés directement dans le navigateur avec la Web Audio API, dans `src/audio.js`.
 
-Aucun fichier audio externe, CDN ou morceau commercial n'est utilisé. Les sons sont produits par le code du projet avec des oscillateurs simples : clics de boutons, ouverture de panneau, indice trouvé, trésor trouvé et ambiance discrète optionnelle.
+Aucun fichier musical externe, CDN ou morceau commercial n'est utilisé. La musique est originale et générée par le code du projet avec des oscillateurs, des accords lents, un filtre passe-bas et de petites notes espacées.
 
-Le son peut être désactivé dans les paramètres. Le volume global et l'ambiance sonore sont sauvegardés dans `localStorage`.
+Les paramètres permettent de couper tout le son, de régler le volume, de désactiver uniquement la musique d'ambiance ou de désactiver uniquement les effets sonores. Ces réglages sont sauvegardés dans `localStorage`.
+
+## Tests
+
+Vérification syntaxique des fichiers principaux :
+
+```bash
+node -c src/main.js
+node -c src/ui.js
+node -c src/audio.js
+node -c src/gameState.js
+node -c src/interactions.js
+node -c src/renderer.js
+node -c src/map.js
+node -c src/mapCollege.js
+node -c scripts/check-map.js
+```
+
+Vérification interne de la carte, des indices et du trésor :
+
+```bash
+node scripts/check-map.js
+```
 
 ## Prochaines améliorations
 

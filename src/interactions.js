@@ -83,7 +83,7 @@
     state.objective = "Victoire : tu as terminé la chasse au trésor.";
     if (window.TreasureGame.Audio) {
       window.TreasureGame.Audio.playTreasureSound();
-      window.TreasureGame.Audio.stopAmbientLoop();
+      window.TreasureGame.Audio.stopAmbientMusic();
     }
     window.TreasureGame.GameState.setMessage(state, "Victoire ! Tu as trouvé le trésor du collège.", 8);
   }

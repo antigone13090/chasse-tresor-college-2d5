@@ -39,17 +39,20 @@
 
   function syncAudioControls() {
     var audio = window.TreasureGame.Audio;
-    var settings = audio ? audio.getSettings() : { muted: true, volume: 0.45, ambientEnabled: false };
+    var settings = audio ? audio.getAudioSettings() : { muted: true, volume: 0.45, ambientEnabled: false, effectsEnabled: false };
     var soundToggle = byId("sound-toggle");
     var ambientToggle = byId("ambient-toggle");
+    var effectsToggle = byId("effects-toggle");
     var volumeSlider = byId("volume-slider");
 
     soundToggle.checked = !settings.muted;
     ambientToggle.checked = settings.ambientEnabled;
+    effectsToggle.checked = settings.effectsEnabled;
     volumeSlider.value = Math.round(settings.volume * 100);
     byId("volume-value").textContent = volumeSlider.value;
     setToggleLabel(soundToggle, "Son : activé", "Son : désactivé");
-    setToggleLabel(ambientToggle, "Ambiance sonore : activée", "Ambiance sonore : désactivée");
+    setToggleLabel(ambientToggle, "Musique d’ambiance : activée", "Musique d’ambiance : désactivée");
+    setToggleLabel(effectsToggle, "Effets sonores : activés", "Effets sonores : désactivés");
   }
 
   function initMenusFromStorage() {
@@ -63,6 +66,7 @@
     var instructionsToggle = byId("instructions-toggle");
     var soundToggle = byId("sound-toggle");
     var ambientToggle = byId("ambient-toggle");
+    var effectsToggle = byId("effects-toggle");
     var volumeSlider = byId("volume-slider");
     var audio = window.TreasureGame.Audio;
 
@@ -70,14 +74,14 @@
 
     byId("play-button").addEventListener("click", function () {
       if (audio) {
-        audio.init();
+        audio.initAudio();
         audio.playClickSound();
       }
       game.start();
     });
     byId("discover-button").addEventListener("click", function () {
       if (audio) {
-        audio.init();
+        audio.initAudio();
         audio.playPanelSound();
       }
       setScreen("discover-screen");
@@ -90,7 +94,7 @@
     });
     byId("settings-button").addEventListener("click", function () {
       if (audio) {
-        audio.init();
+        audio.initAudio();
         audio.playPanelSound();
       }
       setScreen("settings-screen");
@@ -103,7 +107,7 @@
     });
     byId("credits-button").addEventListener("click", function () {
       if (audio) {
-        audio.init();
+        audio.initAudio();
         audio.playPanelSound();
       }
       setScreen("credits-screen");
@@ -116,24 +120,37 @@
     });
     soundToggle.addEventListener("change", function () {
       if (audio) {
-        audio.init();
+        audio.initAudio();
         audio.setMuted(!soundToggle.checked);
         if (soundToggle.checked) {
           audio.playPanelSound();
+          if (game.isPlaying && game.isPlaying()) {
+            audio.startAmbientMusic();
+          }
         }
       }
       setToggleLabel(soundToggle, "Son : activé", "Son : désactivé");
     });
     ambientToggle.addEventListener("change", function () {
       if (audio) {
-        audio.init();
+        audio.initAudio();
         audio.setAmbientEnabled(ambientToggle.checked);
         audio.playPanelSound();
-        if (!ambientToggle.checked) {
-          audio.stopAmbientLoop();
+        if (ambientToggle.checked && game.isPlaying && game.isPlaying()) {
+          audio.startAmbientMusic();
+        } else {
+          audio.stopAmbientMusic();
         }
       }
-      setToggleLabel(ambientToggle, "Ambiance sonore : activée", "Ambiance sonore : désactivée");
+      setToggleLabel(ambientToggle, "Musique d’ambiance : activée", "Musique d’ambiance : désactivée");
+    });
+    effectsToggle.addEventListener("change", function () {
+      if (audio) {
+        audio.initAudio();
+        audio.setEffectsEnabled(effectsToggle.checked);
+        audio.playPanelSound();
+      }
+      setToggleLabel(effectsToggle, "Effets sonores : activés", "Effets sonores : désactivés");
     });
     volumeSlider.addEventListener("input", function () {
       byId("volume-value").textContent = volumeSlider.value;
@@ -163,7 +180,7 @@
     byId("pause-menu-button").addEventListener("click", function () {
       if (audio) {
         audio.playClickSound();
-        audio.stopAmbientLoop();
+        audio.stopAmbientMusic();
       }
       game.backToMenu();
     });
