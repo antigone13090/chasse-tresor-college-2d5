@@ -26,6 +26,7 @@
         <nav class="menu-actions" aria-label="Navigation du menu">
           <button id="play-button" class="arcade-button" type="button">JOUER</button>
           <button id="discover-button" class="arcade-button secondary" type="button">DÉCOUVRIR LE COLLÈGE</button>
+          <button id="future-project-button" class="arcade-button secondary" type="button">PROJET FUTUR</button>
           <button id="settings-button" class="arcade-button" type="button">PARAMÈTRES</button>
           <button id="credits-button" class="arcade-button" type="button">CRÉDITS</button>
         </nav>
@@ -50,6 +51,26 @@
           <li>Self</li>
         </ul>
         <button id="discover-back-button" class="arcade-button" type="button">RETOUR</button>
+      </div>
+    </section>
+
+    <section id="future-project-screen" class="screen" aria-label="Projet Dimitri version future">
+      <div class="menu-panel arcade-panel detail-panel future-panel">
+        <span class="screw top-left" aria-hidden="true"></span>
+        <span class="screw top-right" aria-hidden="true"></span>
+        <span class="screw bottom-left" aria-hidden="true"></span>
+        <span class="screw bottom-right" aria-hidden="true"></span>
+        <p class="kicker">Version future</p>
+        <h2 id="future-project-title">PROJET DIMITRI — VERSION FUTURE</h2>
+        <p id="future-project-summary">Cette branche sert à préparer une version plus ambitieuse du jeu.</p>
+        <div class="future-grid" aria-label="Résumé du projet futur">
+          <p><strong>Prototype actuel</strong><span id="future-current-prototype">HTML / CSS / JavaScript</span></p>
+          <p><strong>Objectif futur</strong><span id="future-goal">Version 3D plus ambitieuse</span></p>
+          <p><strong>Piste possible</strong><span id="future-engine">Unreal Engine</span></p>
+          <p><strong>Contribution</strong><span id="future-contribution">Dimitri, 5A, et élèves du club de codage</span></p>
+        </div>
+        <p class="panel-line"><strong>Étape suivante :</strong> <span id="future-next-step">écrire les idées, définir le style, préparer la map, choisir les assets.</span></p>
+        <button id="future-project-back-button" class="arcade-button" type="button">RETOUR</button>
       </div>
     </section>
 
@@ -153,6 +174,7 @@
   <script src="src/renderer.js"></script>
   <script src="src/audio.js"></script>
   <script src="src/interactions.js"></script>
+  <script src="src/projectVision.js"></script>
   <script src="src/ui.js"></script>
   <script src="src/main.js"></script>
 </body>

@@ -342,6 +342,42 @@ button:focus-visible {
   text-transform: uppercase;
 }
 
+.future-panel {
+  width: min(680px, 100%);
+}
+
+.future-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: clamp(10px, 2svh, 16px) 0;
+}
+
+.future-grid p {
+  display: grid;
+  gap: 4px;
+  min-height: 74px;
+  margin: 0;
+  padding: 9px 10px;
+  border: 3px solid #000;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.38);
+  color: #000;
+  text-align: left;
+}
+
+.future-grid strong {
+  font-size: clamp(0.72rem, 1.8vw, 0.88rem);
+  text-transform: uppercase;
+}
+
+.future-grid span {
+  overflow-wrap: anywhere;
+  font-size: clamp(0.78rem, min(1.9vw, 2.5svh), 0.96rem);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
 .hud {
   position: absolute;
   inset: 12px;
@@ -463,6 +499,10 @@ button:focus-visible {
   }
 
   .place-list {
+    grid-template-columns: 1fr;
+  }
+
+  .future-grid {
     grid-template-columns: 1fr;
   }
 

@@ -186,6 +186,18 @@ Dans la console navigateur, l'état audio peut être vérifié avec :
 window.TreasureGame.Audio.getAudioSettings()
 ```
 
+## Branche test-dimitri-unreal-roadmap
+
+Cette branche sert à préparer une évolution pédagogique et technique du jeu autour des idées de Dimitri. Elle ne remplace pas la version HTML actuelle : le prototype reste jouable dans le navigateur, sans dépendance externe, et conserve la carte, les indices, le trésor, les sons, la musique d'ambiance, le menu, les paramètres et les crédits.
+
+La branche ajoute un panneau `PROJET FUTUR` dans le menu principal et une documentation de conception dans `docs/`. L'objectif est de préparer une réflexion vers une possible version Unreal Engine, sans transformer ce dépôt en projet Unreal. Elle peut servir de support au club de codage pour discuter des rôles, de la map, du style graphique, des assets, des énigmes et des licences.
+
+Liens utiles :
+
+- dépôt GitHub : https://github.com/antigone13090/chasse-tresor-college-2d5
+- version jouable GitHub Pages : https://antigone13090.github.io/chasse-tresor-college-2d5/
+- documents de conception : `docs/`
+
 ## Tests
 
 Vérification syntaxique des fichiers principaux :

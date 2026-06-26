@@ -8,7 +8,7 @@
   }
 
   function setScreen(id) {
-    ["main-menu", "discover-screen", "settings-screen", "credits-screen", "pause-screen"].forEach(function (screenId) {
+    ["main-menu", "discover-screen", "future-project-screen", "settings-screen", "credits-screen", "pause-screen"].forEach(function (screenId) {
       byId(screenId).classList.toggle("active", screenId === id);
     });
   }
@@ -83,7 +83,23 @@
     var instructionsToggle = byId("instructions-toggle");
     instructionsToggle.checked = loadInstructionsVisible();
     setToggleLabel(instructionsToggle, "Afficher les consignes : activé", "Afficher les consignes : désactivé");
+    populateFutureProjectPanel();
     syncAudioControls();
+  }
+
+  function populateFutureProjectPanel() {
+    var vision = window.TreasureGame.ProjectVision;
+    if (!vision) {
+      return;
+    }
+
+    byId("future-project-title").textContent = vision.title;
+    byId("future-project-summary").textContent = vision.summary;
+    byId("future-current-prototype").textContent = vision.currentPrototype;
+    byId("future-goal").textContent = vision.futureGoal;
+    byId("future-engine").textContent = vision.possibleEngine;
+    byId("future-contribution").textContent = vision.studentContribution;
+    byId("future-next-step").textContent = vision.nextSteps.join(", ") + ".";
   }
 
   function bindMenus(game) {
@@ -119,6 +135,20 @@
       setScreen("discover-screen");
     });
     byId("discover-back-button").addEventListener("click", function () {
+      if (audio) {
+        audio.playClickSound();
+      }
+      setScreen("main-menu");
+    });
+    byId("future-project-button").addEventListener("click", function () {
+      if (audio) {
+        audio.initAudio();
+        audio.resumeAudio();
+        audio.playPanelSound();
+      }
+      setScreen("future-project-screen");
+    });
+    byId("future-project-back-button").addEventListener("click", function () {
       if (audio) {
         audio.playClickSound();
       }
