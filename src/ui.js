@@ -28,6 +28,26 @@
     byId("pause-menu-button").addEventListener("click", game.backToMenu);
   }
 
+  function interactionLabel(interaction) {
+    if (!interaction) {
+      return "";
+    }
+
+    if (window.TreasureGame.MapData.isClueToken(interaction.token)) {
+      return "E - Récupérer l'indice";
+    }
+
+    if (interaction.token === "T") {
+      return "E - Ouvrir le trésor";
+    }
+
+    if (interaction.token === "D" || interaction.token === "F") {
+      return "E - Ouvrir / fermer";
+    }
+
+    return "E - Interagir";
+  }
+
   function updateHud(state, player) {
     var hud = byId("hud");
     var prompt = byId("interaction-prompt");
@@ -41,6 +61,7 @@
     byId("clue-count").textContent = state.foundClues + " / " + window.TreasureGame.Config.clueTotal;
     byId("zone-text").textContent = window.TreasureGame.MapData.zoneAt(cellX, cellY);
 
+    prompt.textContent = interactionLabel(state.currentInteraction);
     prompt.classList.toggle("hidden", state.mode !== "playing" || !state.currentInteraction);
 
     message.textContent = state.temporaryMessage;
