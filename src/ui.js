@@ -7,25 +7,70 @@
     return document.getElementById(id);
   }
 
+  function soundButton() {
+    if (window.TreasureGame.Audio) {
+      window.TreasureGame.Audio.unlock();
+      window.TreasureGame.Audio.button();
+    }
+  }
+
   function setScreen(id) {
     ["main-menu", "rules-screen", "pause-screen"].forEach(function (screenId) {
       byId(screenId).classList.toggle("active", screenId === id);
     });
   }
 
+  function quitOrReturn() {
+    soundButton();
+
+    if (window.opener && !window.opener.closed) {
+      window.close();
+      setTimeout(function () {
+        window.location.href = "/";
+      }, 150);
+      return;
+    }
+
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+
+    window.location.href = "/";
+  }
+
   function bindMenus(game) {
-    byId("play-button").addEventListener("click", game.start);
+    byId("play-button").addEventListener("click", function () {
+      soundButton();
+      game.start();
+    });
+
     byId("rules-button").addEventListener("click", function () {
+      soundButton();
       setScreen("rules-screen");
     });
+
     byId("rules-back-button").addEventListener("click", function () {
+      soundButton();
       setScreen("main-menu");
     });
-    byId("quit-button").addEventListener("click", function () {
-      setScreen("main-menu");
+
+    byId("sound-button").addEventListener("click", function () {
+      var enabled = window.TreasureGame.Audio.toggle();
+      byId("sound-button").textContent = enabled ? "Son : activé" : "Son : coupé";
     });
-    byId("resume-button").addEventListener("click", game.resume);
-    byId("pause-menu-button").addEventListener("click", game.backToMenu);
+
+    byId("quit-button").addEventListener("click", quitOrReturn);
+
+    byId("resume-button").addEventListener("click", function () {
+      soundButton();
+      game.resume();
+    });
+
+    byId("pause-menu-button").addEventListener("click", function () {
+      soundButton();
+      game.backToMenu();
+    });
   }
 
   function updateHud(state, player) {
