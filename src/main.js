@@ -28,7 +28,7 @@
     state.mode = "playing";
     window.TreasureGame.UI.setScreen("");
     window.TreasureGame.Audio.unlock();
-    window.TreasureGame.Audio.startGame();
+    window.TreasureGame.Audio.startGame();\n    window.TreasureGame.Audio.startMusic();
     window.TreasureGame.GameState.setMessage(state, "Explore l'entrée centrale et trouve la Vie scolaire.", 3);
     requestGamePointerLock();
   }
