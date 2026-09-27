@@ -13,26 +13,46 @@
     player = window.TreasureGame.Player.create();
   }
 
+  function requestGamePointerLock() {
+    if (canvas.requestPointerLock && document.pointerLockElement !== canvas) {
+      try {
+        canvas.requestPointerLock();
+      } catch (error) {
+        // Le clavier reste utilisable si le navigateur refuse le pointer lock.
+      }
+    }
+  }
+
   function start() {
     resetGame();
     state.mode = "playing";
     window.TreasureGame.UI.setScreen("");
+    window.TreasureGame.Audio.unlock();
+    window.TreasureGame.Audio.startGame();
     window.TreasureGame.GameState.setMessage(state, "Explore l'entrée centrale et trouve la Vie scolaire.", 3);
+    requestGamePointerLock();
   }
 
   function resume() {
     state.mode = "playing";
     window.TreasureGame.UI.setScreen("");
+    requestGamePointerLock();
   }
 
   function pause() {
     state.mode = "paused";
     window.TreasureGame.UI.setScreen("pause-screen");
+    if (document.pointerLockElement === canvas && document.exitPointerLock) {
+      document.exitPointerLock();
+    }
   }
 
   function backToMenu() {
     state.mode = "menu";
     window.TreasureGame.UI.setScreen("main-menu");
+    if (document.pointerLockElement === canvas && document.exitPointerLock) {
+      document.exitPointerLock();
+    }
   }
 
   function handleShortcuts() {
