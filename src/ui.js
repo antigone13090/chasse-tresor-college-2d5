@@ -23,20 +23,22 @@
   function quitOrReturn() {
     soundButton();
 
-    if (window.opener && !window.opener.closed) {
-      window.close();
-      setTimeout(function () {
+    if (document.pointerLockElement && document.exitPointerLock) {
+      document.exitPointerLock();
+    }
+
+    // Tente d'abord de fermer l'onglet lorsqu'il a été ouvert depuis Moodle.
+    // Si le navigateur refuse window.close(), on revient à la page précédente
+    // ou, à défaut, à l'accueil du site.
+    window.close();
+
+    window.setTimeout(function () {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
         window.location.href = "/";
-      }, 150);
-      return;
-    }
-
-    if (window.history.length > 1) {
-      window.history.back();
-      return;
-    }
-
-    window.location.href = "/";
+      }
+    }, 180);
   }
 
   function bindMenus(game) {
