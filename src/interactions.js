@@ -48,6 +48,7 @@
     }
 
     if (clue.order !== state.foundClues + 1) {
+      window.TreasureGame.Audio.denied();
       window.TreasureGame.GameState.setMessage(state, "Tu dois d'abord trouver l'indice " + (state.foundClues + 1) + ".", 3);
       return;
     }
@@ -56,21 +57,25 @@
     state.collected[interaction.token] = true;
     state.grid[interaction.y][interaction.x] = "0";
     state.objective = clue.objective;
+    window.TreasureGame.Audio.clue();
     window.TreasureGame.GameState.setMessage(state, clue.title + " : " + clue.text, 6);
   }
 
   function interactWithDoor(state, interaction) {
     if (interaction.token === "F" && state.foundClues < window.TreasureGame.Config.clueTotal) {
+      window.TreasureGame.Audio.denied();
       window.TreasureGame.GameState.setMessage(state, "Cette porte reste fermée : trouve les 6 indices avant d'entrer.", 3.5);
       return;
     }
 
     state.grid[interaction.y][interaction.x] = "0";
+    window.TreasureGame.Audio.door();
     window.TreasureGame.GameState.setMessage(state, "La porte s'ouvre.", 1.8);
   }
 
   function interactWithTreasure(state, interaction) {
     if (state.foundClues < window.TreasureGame.Config.clueTotal) {
+      window.TreasureGame.Audio.denied();
       window.TreasureGame.GameState.setMessage(state, "Le trésor est verrouillé par l'énigme : trouve tous les indices.", 3);
       return;
     }
@@ -78,12 +83,14 @@
     state.treasureFound = true;
     state.grid[interaction.y][interaction.x] = "0";
     state.objective = "Victoire : tu as terminé la chasse au trésor.";
+    window.TreasureGame.Audio.treasure();
     window.TreasureGame.GameState.setMessage(state, "Victoire ! Tu as trouvé le trésor du collège.", 8);
   }
 
   function performInteraction(state, player) {
     var interaction = findInteraction(state, player);
     if (!interaction) {
+      window.TreasureGame.Audio.denied();
       window.TreasureGame.GameState.setMessage(state, "Aucun objet à portée.", 1.5);
       return;
     }
